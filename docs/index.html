@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Among Us IRL Companion</title>
+    <!-- Web App Capabilities & Mobile Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b0e14">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --panel-bg: #161b26;
+            --text-color: #f5f6fa;
+            --text-muted: #a4b0be;
+            --primary: #2f3542;
+            --impostor: #ff4757;
+            --crewmate: #1e90ff;
+            --accent: #ffa502;
+            --success: #2ed573;
+            --purple: #9b59b6;
+            --border-radius: 12px;
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        /* Prevent system zoom & scrolling behaviors on mobile */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Allow inputs to be selectable */
+        input, textarea, select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 12px;
+            padding-bottom: calc(20px + var(--safe-area-bottom));
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--panel-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            position: relative;
+        }
+
+        h1, h2, h3 {
+            text-align: center;
+            margin-bottom: 16px;
+            font-weight: 800;
+        }
+
+        h1 {
+            color: var(--impostor);
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        p {
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* Form elements optimized for mobile touch targets */
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-color);
+        }
+
+        textarea, input, select {
+            width: 100%;
+            background: var(--bg-color);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            color: var(--text-color);
+            padding: 14px;
+            font-size: 1rem;
+            margin-bottom: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+            -webkit-appearance: none; /* Reset iOS styling */
+        }
+
+        textarea:focus, input:focus, select:focus {
+            border-color: var(--crewmate);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-container input {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        /* Mobile Action Buttons (Min height 48px for iOS/Android guidelines) */
+        .btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 48px;
+            padding: 12px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-align: center;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.1s, transform 0.05s;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        .btn-primary { background-color: var(--crewmate); color: white; }
+        .btn-danger { background-color: var(--impostor); color: white; }
+        .btn-warning { background-color: var(--accent); color: #000; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-secondary { background-color: var(--primary); color: white; }
+        .btn-purple { background-color: var(--purple); color: white; }
+
+        .error-message {
+            color: var(--impostor);
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        /* Card reveal setups */
+        .reveal-box {
+            background: var(--bg-color);
+            padding: 24px 16px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            margin-bottom: 16px;
+            border: 2px dashed var(--primary);
+        }
+
+        .reveal-box.impostor-role { border-color: var(--impostor); background: rgba(255, 71, 87, 0.03); }
+        .reveal-box.crewmate-role { border-color: var(--crewmate); background: rgba(30, 144, 255, 0.03); }
+        .reveal-box.scientist-role { border-color: var(--purple); background: rgba(155, 89, 182, 0.03); }
+        .reveal-box.detective-role { border-color: var(--accent); background: rgba(255, 165, 2, 0.03); }
+
+        .role-text {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin: 12px 0;
+            text-transform: uppercase;
+        }
+
+        .role-text.crew { color: var(--crewmate); }
+        .role-text.imp { color: var(--impostor); }
+        .role-text.sci { color: var(--purple); }
+        .role-text.det { color: var(--accent); }
+
+        .pass-instructions {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .target-name {
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1.4rem;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .config-player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* Dashboard elements */
+        .status-summary {
+            display: flex;
+            justify-content: space-between;
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+        }
+
+        .progress-container {
+            margin-bottom: 12px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+
+        .progress-bar-bg {
+            background: var(--primary);
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-bar-fill {
+            background: var(--success);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease-out;
+        }
+
+        .admin-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 165, 2, 0.03);
+            border: 1px solid var(--primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+        }
+
+        .player-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 5px solid var(--crewmate);
+        }
+
+        .player-list-item.dead {
+            opacity: 0.4;
+            border-left-color: #57606f;
+            text-decoration: line-through;
+        }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-name {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .player-status-badge {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .player-status-badge.alive { color: var(--success); }
+        .player-status-badge.dead { color: #718093; }
+
+        .kill-toggle-btn {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            min-height: 36px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .action-grid .btn {
+            margin-bottom: 0;
+            padding: 10px;
+            font-size: 0.8rem;
+            min-height: 44px;
+        }
+
+        .voter-header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .voting-options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .voting-option-card {
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            min-height: 44px;
+        }
+
+        .voting-option-card.selected {
+            border-color: var(--accent);
+            background: rgba(255, 165, 2, 0.08);
+        }
+
+        @keyframes emergency-flash {
+            0%, 100% { background-color: var(--panel-bg); }
+            50% { background-color: rgba(255, 71, 87, 0.15); }
+        }
+
+        .emergency-active {
+            animation: emergency-flash 1s infinite;
+        }
+
+        .summary-list {
+            list-style: none;
+            margin: 12px 0;
+        }
+
+        .summary-list li {
+            padding: 10px;
+            border-bottom: 1px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .text-center { text-align: center; }
+
+        /* Overlays & Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            border: 2px solid var(--primary);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .task-list-check {
+            list-style: none;
+            margin: 12px 0;
+        }
+
+        .task-list-check li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: var(--bg-color);
+            margin-bottom: 8px;
+            border-radius: 6px;
+        }
+
+        .task-list-check input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .vital-card {
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid var(--primary);
+        }
+
+        .vital-card.alive { border-color: var(--success); }
+        .vital-card.dead { border-color: var(--impostor); opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="game-container">
+    
+    <!-- 1. SETUP VIEW -->
+    <div id="view-setup" class="view active">
+        <h1>Among Us IRL</h1>
+        <p>Coordinate real-world tasks, track vitals, and solve the investigation.</p>
+        
+        <div id="setup-error" class="error-message"></div>
+
+        <label for="player-input">Player Names (One per line)</label>
+        <textarea id="player-input" rows="4" placeholder="Red&#10;Blue&#10;Green&#10;Yellow&#10;Pink&#10;Black"></textarea>
+
+        <label for="impostor-count">Number of Impostors</label>
+        <input type="number" id="impostor-count" min="1" value="1">
+
+        <label for="admin-passcode">Admin Password (Master Override)</label>
+        <input type="text" id="admin-passcode" value="admin">
+
+        <h3 style="text-align: left; margin-top: 15px; font-size: 1rem; color: var(--accent);">Special Roles</h3>
+        
+        <label for="scientist-count">Scientists (Access Vitals)</label>
+        <input type="number" id="scientist-count" min="0" value="0">
+
+        <label for="detective-count">Detectives (Trace discovery locations)</label>
+        <input type="number" id="detective-count" min="0" value="0">
+
+        <div class="checkbox-container" onclick="toggleTaskSetupView()">
+            <input type="checkbox" id="enable-tasks-toggle" checked onclick="event.stopPropagation(); toggleTaskSetupView();">
+            <label style="margin-bottom: 0; cursor: pointer;">Enable Tasks System</label>
+        </div>
+
+        <div id="task-setup-details">
+            <label for="tasks-per-player">Tasks Assigned Per Player</label>
+            <input type="number" id="tasks-per-player" min="1" max="10" value="3">
+
+            <label for="task-pool-input">Global Task Pool (One per line)</label>
+            <textarea id="task-pool-input" rows="4" placeholder="Empty the recycling bin&#10;Wipe down the table&#10;Do 10 jumping jacks&#10;Stack 5 books alphabetically&#10;Drink a glass of water&#10;Touch the front door and back door"></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="proceedToCustomization()">Configure Players</button>
+    </div>
+
+    <!-- 1B. CUSTOMIZATION/EXCLUSIONS VIEW -->
+    <div id="view-customization" class="view">
+        <h2>Player Exclusions</h2>
+        <p>Deselect players who should have <strong>No Tasks</strong>. Rest of the roles remain randomized.</p>
+        
+        <div id="custom-players-list-container" style="margin-bottom: 20px;">
+            <!-- Rendered dynamically -->
+        </div>
+
+        <button class="btn btn-primary" onclick="initiateSetup()">Start Game & Distribute Roles</button>
+        <button class="btn btn-secondary" onclick="showView('setup')">Back</button>
+    </div>
+
+    <!-- 2. REVEAL VIEW -->
+    <div id="view-reveal" class="view">
+        <h2 id="reveal-title">Distribute Roles</h2>
+        
+        <div id="reveal-pass-state">
+            <p class="text-center">To keep roles private, pass the device to the player named below:</p>
+            <div class="reveal-box">
+                <span class="pass-instructions">Pass device to:</span>
+                <span id="pass-target-name" class="target-name">Player Name</span>
+            </div>
+            <button class="btn btn-warning" onclick="showPlayerRole()">I am this player, show my role</button>
+        </div>
+
+        <div id="reveal-show-state" style="display: none;">
+            <p class="text-center">Do not show others!</p>
+            <div id="role-card-box" class="reveal-box">
+                <div id="role-display-title" class="role-text">CREWMATE</div>
+                <p id="role-description">Complete tasks and find the Impostor.</p>
+                
+                <div style="margin-top: 15px;">
+                    <label for="reveal-custom-pin">Configure Your Secret 3-Digit Access PIN:</label>
+                    <input type="password" id="reveal-custom-pin" pattern="[0-9]*" inputmode="numeric" maxlength="3" style="max-width: 140px; text-align: center; font-size: 1.4rem; letter-spacing: 5px; margin-bottom: 10px;">
+                    <p style="font-size: 0.8rem; color: var(--accent);">Remember this PIN to submit reports and access special screens.</p>
+                </div>
+
+                <div id="reveal-tasks-list-block" style="text-align: left; margin-top: 15px; background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px;">
+                    <h4 id="reveal-tasks-header" style="color: var(--accent); margin-bottom: 8px;">Assigned Tasks:</h4>
+                    <ul id="reveal-assigned-tasks-ul" style="list-style: inside circle; font-size: 0.85rem;">
+                        <!-- Dynamic tasks -->
+                    </ul>
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="hideAndAdvance()">I have configured my PIN, hide role</button>
+        </div>
+
+        <p class="text-center" id="reveal-progress" style="margin-top: 15px; font-weight: bold;"></p>
+    </div>
+
+    <!-- 3. DASHBOARD VIEW -->
+    <div id="view-dashboard" class="view">
+        <h2>Dashboard</h2>
+
+        <div class="progress-container" id="dash-task-progress-block">
+            <div class="progress-header">
+                <span>Task Completion Tracker</span>
+                <span id="progress-percentage-text">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div id="progress-bar-fill" class="progress-bar-fill"></div>
+            </div>
+        </div>
+        
+        <div class="status-summary">
+            <div>Crew: <span id="dash-crew-count" style="font-weight: bold; color: var(--crewmate);">0</span></div>
+            <div>Impostors: <span id="dash-imp-count" style="font-weight: bold; color: var(--impostor);">0</span></div>
+        </div>
+
+        <div class="admin-banner">
+            <div>Admin Console: <span id="admin-status-text" style="font-weight: bold; color: var(--impostor);">LOCKED 🔒</span></div>
+            <button class="btn btn-warning" id="admin-auth-toggle-btn" onclick="openAdminAuthModal()" style="width: auto; margin-bottom: 0; padding: 6px 12px; font-size: 0.75rem; min-height: 32px;">Unlock</button>
+        </div>
+
+        <div class="action-grid">
+            <button class="btn btn-danger" onclick="triggerEmergencyMeeting()">📢 Emergency</button>
+            <button class="btn btn-purple" onclick="openReportBodyModal()">🚨 Report Body</button>
+            <button class="btn btn-success" id="player-tasks-btn" onclick="openPlayerTasksAccessModal()">🛠️ My Tasks</button>
+            <button class="btn btn-secondary" id="scientist-vitals-btn" onclick="openVitalsAccessModal()">🩺 Vitals</button>
+            <button class="btn btn-warning" id="detective-clues-btn" onclick="openDetectiveCluesAccessModal()" style="grid-column: span 2;">🔍 Footprint Tracker</button>
+        </div>
+
+        <h3 style="text-align: left; font-size: 1rem; margin-bottom: 8px;">Player Status List</h3>
+        <div id="dashboard-player-list">
+            <!-- Rendered dynamically -->
+        </div>
+
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="confirmEndGame()">End Game / Reset</button>
+    </div>
+
+    <!-- 4. EMERGENCY MEETING VIEW (VOTING) -->
+    <div id="view-meeting" class="view">
+        <h2 id="meeting-title" style="color: var(--impostor);">⚠️ Emergency Meeting</h2>
+        
+        <div id="meeting-discovery-alert" style="display:none; background: rgba(255, 71, 87, 0.15); border: 2px solid var(--impostor); padding: 12px; border-radius: 8px; margin-bottom: 16px; text-align: center;">
+            <h3 style="color: var(--impostor); margin-bottom: 4px; font-size: 1rem;">⚠️ Unannounced Dead Discovered!</h3>
+            <p id="meeting-discovery-names" style="font-weight: bold; font-size: 0.9rem; color: var(--text-color); margin-bottom: 0;"></p>
+        </div>
+
+        <div class="voter-header">
+            <p>Voter: <span id="current-voter-name" style="font-weight: bold; color: var(--accent); font-size: 1.2rem;">Name</span></p>
+            <p>Choose who to eject or select Skip.</p>
+        </div>
+
+        <div class="voting-options-container" id="voting-choices">
+            <!-- Dynamic selection items -->
+        </div>
+
+        <button class="btn btn-primary" onclick="submitVote()">Confirm Vote</button>
+        <p class="text-center" id="voting-progress"></p>
+    </div>
+
+    <!-- 5. MEETING OUTCOME VIEW -->
+    <div id="view-outcome" class="view">
+        <h2>Meeting Outcome</h2>
+        
+        <div class="reveal-box" id="outcome-box">
+            <span id="outcome-main-text" class="target-name" style="color: var(--text-color); font-size: 1.3rem;">...</span>
+            <p id="outcome-sub-text" style="margin-top: 12px; margin-bottom: 0;"></p>
+        </div>
+
+        <h3>Vote Breakdown</h3>
+        <ul id="vote-breakdown-list" class="summary-list">
+            <!-- Rendered dynamically -->
+        </ul>
+
+        <button class="btn btn-primary" onclick="proceedAfterMeeting()">Resume Game</button>
+    </div>
+
+    <!-- 6. GAME OVER VIEW -->
+    <div id="view-gameover" class="view">
+        <h1 id="gameover-title" style="font-size: 2rem; margin-bottom: 10px;">VICTORY</h1>
+        <h2 id="gameover-winner-type" style="margin-bottom: 20px;">CREWMATES WIN</h2>
+
+        <h3>Final Role List</h3>
+        <ul id="gameover-player-list" class="summary-list">
+            <!-- Dynamic final summary -->
+        </ul>
+
+        <button class="btn btn-primary" onclick="resetToSetup(true)" style="margin-top: 20px;">Play Again (Same Players)</button>
+        <button class="btn btn-secondary" onclick="resetToSetup(false)">Setup Screen</button>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- MODAL: ADMIN LOGIN -->
+    <div class="modal-overlay" id="modal-admin-auth">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 12px;">Unlock Admin Console</h3>
+            <p>Enter the game admin passcode to override player settings and statuses.</p>
+            <input type="password" id="admin-pass-input" placeholder="Password">
+            <div id="admin-auth-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Incorrect passcode.</div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="closeAdminAuthModal()">Cancel</button>
+                <button class="btn btn-primary" style="margin-bottom: 0;" onclick="submitAdminAuth()">Unlock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: REPORT BODY -->
+    <div class="modal-overlay" id="modal-report-body">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 10px; color: var(--purple);">🚨 Report Dead Body</h3>
+            <p>Input details below. Enter your PIN or Admin code to file the report.</p>
+            
+            <label for="report-finder">Who found the body?</label>
+            <select id="report-finder"></select>
+
+            <label for="report-finder-code">Finder PIN / Admin Passcode</label>
+            <input type="password" id="report-finder-code" pattern="[0-9]*" inputmode="numeric" placeholder="3-digit PIN or Admin Code">
+
+            <label for="report-victim">Who was found dead?</label>
+            <select id="report-victim"></select>
+
+            <label for="report-location">Location of Discovery (e.g. Kitchen, Hallway)</label>
+            <input type="text" id="report-location" placeholder="Where was the body found?">
+
+            <div id="report-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Validation error. Check code/inputs.</div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="closeReportBodyModal()">Cancel</button>
+                <button class="btn btn-purple" style="margin-bottom: 0;" onclick="submitBodyReport()">File Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PLAYER TASKS ACCESS -->
+    <div class="modal-overlay" id="modal-player-tasks-access">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 12px;">Access Player Tasks</h3>
+            <p>Select your name and enter your 3-digit PIN or Admin code.</p>
+            
+            <label for="task-select-player">Player Name</label>
+            <select id="task-select-player"></select>
+
+            <label for="task-player-pin">Your Secret PIN / Admin Code</label>
+            <input type="password" id="task-player-pin" pattern="[0-9]*" inputmode="numeric" placeholder="PIN / Admin Code">
+            
+            <div id="player-task-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Invalid PIN/Code.</div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="closePlayerTasksAccessModal()">Cancel</button>
+                <button class="btn btn-primary" style="margin-bottom: 0;" onclick="verifyPlayerTasksPin()">Access</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PLAYER TASKS SHEET -->
+    <div class="modal-overlay" id="modal-player-tasks-sheet">
+        <div class="modal-content">
+            <h3 id="task-sheet-title" style="margin-bottom: 8px; color: var(--accent);">Tasks</h3>
+            <p style="font-size: 0.8rem; margin-bottom: 12px;" id="task-sheet-subtitle">Check off completed real life tasks.</p>
+            
+            <ul id="player-task-checkboxes" class="task-list-check">
+                <!-- Loaded dynamically -->
+            </ul>
+
+            <button class="btn btn-primary" style="margin-top: 15px; margin-bottom: 0;" onclick="saveAndCloseTaskSheet()">Save & Close</button>
+        </div>
+    </div>
+
+    <!-- MODAL: SCIENTIST VITALS ACCESS -->
+    <div class="modal-overlay" id="modal-vitals-access">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 12px; color: var(--purple);">🩺 Access Vitals</h3>
+            <p>Enter a Scientist's PIN or Admin code to view crew vital monitors.</p>
+            
+            <label for="vitals-select-player">Scientist Name</label>
+            <select id="vitals-select-player"></select>
+
+            <label for="vitals-player-pin">Secret PIN / Admin Code</label>
+            <input type="password" id="vitals-player-pin" pattern="[0-9]*" inputmode="numeric" placeholder="PIN / Admin Code">
+            
+            <div id="vitals-auth-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Invalid PIN or Admin passcode.</div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="closeVitalsAccessModal()">Cancel</button>
+                <button class="btn btn-purple" style="margin-bottom: 0;" onclick="verifyVitalsAccess()">Access Vitals</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VITALS DISPLAY -->
+    <div class="modal-overlay" id="modal-vitals-display">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 4px; color: var(--purple);">🩺 Vitals Monitor</h3>
+            <p class="text-center" style="font-size: 0.75rem; color: var(--text-muted);" id="vitals-charges-left">Scans Remaining: 0</p>
+            
+            <div class="vitals-grid" id="vitals-container-grid">
+                <!-- Loaded dynamically -->
+            </div>
+
+            <button class="btn btn-secondary" style="margin-top: 12px; margin-bottom: 0;" onclick="closeVitalsDisplay()">Close Screen</button>
+        </div>
+    </div>
+
+    <!-- MODAL: DETECTIVE FOOTPRINT/CLUES ACCESS -->
+    <div class="modal-overlay" id="modal-detective-clues-access">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 12px; color: var(--accent);">🔍 Footprint Tracker Access</h3>
+            <p>Enter a Detective's PIN or Admin code to view the reported death footprints database.</p>
+            
+            <label for="clues-select-player">Detective Name</label>
+            <select id="clues-select-player"></select>
+
+            <label for="clues-player-pin">Secret PIN / Admin Code</label>
+            <input type="password" id="clues-player-pin" pattern="[0-9]*" inputmode="numeric" placeholder="PIN / Admin Code">
+            
+            <div id="clues-auth-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Invalid PIN or Admin passcode.</div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="closeDetectiveCluesAccessModal()">Cancel</button>
+                <button class="btn btn-warning" style="margin-bottom: 0;" onclick="verifyDetectiveAccess()">Access Tracker</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DETECTIVE CLUES DISPLAY -->
+    <div class="modal-overlay" id="modal-detective-clues-display">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 12px; color: var(--accent);">👣 Footprint Directory</h3>
+            <p>Database entries of discovered body locations:</p>
+            
+            <ul id="clue-tracker-list" class="summary-list" style="margin-bottom: 16px;">
+                <!-- Loaded dynamically -->
+            </ul>
+
+            <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="closeDetectiveCluesDisplay()">Close Database</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // App State Configuration
+    let state = {
+        players: [], // { name, role, status, pin, hasTasks, tasks, scansUsed }
+        impostorCount: 1,
+        scientistCount: 0,
+        detectiveCount: 0,
+        adminPasscode: 'admin',
+        isAdminAuthenticated: false,
+        tasksEnabled: true,
+        tasksPerPlayer: 3,
+        taskPool: [],
+        revealIndex: 0,
+        votingIndex: 0,
+        votes: {}, 
+        selectedVoteTarget: null,
+        audioCtx: null,
+        activeTaskEditingPlayer: null,
+        activeScientistPlayer: null,
+        clueDatabase: [], 
+        unannouncedDeaths: [], 
+        maxVitalsCharges: 5
+    };
+
+    const views = {
+        setup: document.getElementById('view-setup'),
+        customization: document.getElementById('view-customization'),
+        reveal: document.getElementById('view-reveal'),
+        dashboard: document.getElementById('view-dashboard'),
+        meeting: document.getElementById('view-meeting'),
+        outcome: document.getElementById('view-outcome'),
+        gameover: document.getElementById('view-gameover')
+    };
+
+    function showView(viewId) {
+        Object.keys(views).forEach(key => {
+            if (key === viewId) {
+                views[key].classList.add('active');
+            } else {
+                views[key].classList.remove('active');
+            }
+        });
+        
+        if (viewId === 'meeting') {
+            document.getElementById('game-container').classList.add('emergency-active');
+        } else {
+            document.getElementById('game-container').classList.remove('emergency-active');
+        }
+    }
+
+    function toggleTaskSetupView() {
+        const checkbox = document.getElementById('enable-tasks-toggle');
+        const detailBlock = document.getElementById('task-setup-details');
+        detailBlock.style.display = checkbox.checked ? 'block' : 'none';
+    }
+
+    // Sound generation
+    function getAudioContext() {
+        if (!state.audioCtx) {
+            state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (state.audioCtx.state === 'suspended') {
+            state.audioCtx.resume();
+        }
+        return state.audioCtx;
+    }
+
+    function playSirenAlarm() {
+        try {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+            const duration = 2.5;
+            
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            osc.type = 'sawtooth';
+            
+            osc.frequency.setValueAtTime(400, now);
+            for (let i = 0; i < duration * 2; i++) {
+                osc.frequency.setValueAtTime(650, now + (i * 0.4));
+                osc.frequency.setValueAtTime(400, now + (i * 0.4) + 0.2);
+            }
+            
+            gainNode.gain.setValueAtTime(0.2, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+            
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            osc.start(now);
+            osc.stop(now + duration);
+        } catch (e) {
+            console.log("Audio contextual trigger requirement failed.", e);
+        }
+    }
+
+    function playReportSound() {
+        try {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+            const duration = 1.8;
+
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            osc.type = 'sine';
+            
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(150, now + 0.4);
+            
+            for (let i = 0; i < 3; i++) {
+                osc.frequency.setValueAtTime(300, now + 0.5 + (i * 0.4));
+                osc.frequency.setValueAtTime(450, now + 0.5 + (i * 0.4) + 0.2);
+            }
+
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + duration);
+        } catch (e) {
+            console.log("Audio contextual trigger requirement failed.", e);
+        }
+    }
+
+    // 1B. CUSTOMIZATION/EXCLUSIONS
+    function proceedToCustomization() {
+        const errorDiv = document.getElementById('setup-error');
+        errorDiv.style.display = 'none';
+
+        const text = document.getElementById('player-input').value.trim();
+        const rawNames = text.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+        const uniqueNames = [...new Set(rawNames)];
+        
+        const impCount = parseInt(document.getElementById('impostor-count').value, 10);
+        const sciCount = parseInt(document.getElementById('scientist-count').value, 10);
+        const detCount = parseInt(document.getElementById('detective-count').value, 10);
+
+        if (uniqueNames.length < 3) {
+            showSetupError('At least 3 players are required to configure a game.');
+            return;
+        }
+        if (impCount < 1) {
+            showSetupError('There must be at least 1 Impostor.');
+            return;
+        }
+        if (impCount + sciCount + detCount > uniqueNames.length) {
+            showSetupError(`The total number of specialized roles (${impCount + sciCount + detCount}) exceeds your total player count (${uniqueNames.length}).`);
+            return;
+        }
+
+        const container = document.getElementById('custom-players-list-container');
+        container.innerHTML = '';
+        
+        uniqueNames.forEach((name, idx) => {
+            const row = document.createElement('div');
+            row.className = 'config-player-row';
+            row.innerHTML = `
+                <span style="font-weight:bold;">${name}</span>
+                <label class="checkbox-container" style="margin-bottom:0;">
+                    <input type="checkbox" checked id="has-tasks-idx-${idx}" value="${name}"> Has Tasks
+                </label>
+            `;
+            container.appendChild(row);
+        });
+
+        showView('customization');
+    }
+
+    // 1. SETUP GAME
+    function initiateSetup() {
+        const text = document.getElementById('player-input').value.trim();
+        const rawNames = text.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+        const uniqueNames = [...new Set(rawNames)];
+
+        const impCount = parseInt(document.getElementById('impostor-count').value, 10);
+        const sciCount = parseInt(document.getElementById('scientist-count').value, 10);
+        const detCount = parseInt(document.getElementById('detective-count').value, 10);
+        const adminPass = document.getElementById('admin-passcode').value.trim();
+        const tasksEnabled = document.getElementById('enable-tasks-toggle').checked;
+
+        let selectedTasksPool = [];
+        let taskConfigNum = 3;
+        if (tasksEnabled) {
+            taskConfigNum = parseInt(document.getElementById('tasks-per-player').value, 10);
+            const poolText = document.getElementById('task-pool-input').value.trim();
+            selectedTasksPool = poolText.split('\n').map(t => t.trim()).filter(t => t.length > 0);
+        }
+
+        state.impostorCount = impCount;
+        state.scientistCount = sciCount;
+        state.detectiveCount = detCount;
+        state.adminPasscode = adminPass;
+        state.isAdminAuthenticated = false; 
+        state.tasksEnabled = tasksEnabled;
+        state.tasksPerPlayer = taskConfigNum;
+        state.taskPool = selectedTasksPool;
+        state.clueDatabase = [];
+        state.unannouncedDeaths = [];
+
+        state.players = uniqueNames.map((name, idx) => {
+            const hasTasksCheck = document.getElementById(`has-tasks-idx-${idx}`);
+            const playerHasTasks = hasTasksCheck ? hasTasksCheck.checked : true;
+            return {
+                name: name,
+                role: 'crewmate',
+                status: 'alive',
+                pin: '', 
+                hasTasks: playerHasTasks,
+                tasks: [],
+                scansUsed: 0
+            };
+        });
+
+        shuffleArray(state.players);
+        
+        let assignedCount = 0;
+        for (let i = 0; i < impCount; i++) {
+            state.players[assignedCount++].role = 'impostor';
+        }
+        for (let i = 0; i < sciCount; i++) {
+            state.players[assignedCount++].role = 'scientist';
+        }
+        for (let i = 0; i < detCount; i++) {
+            state.players[assignedCount++].role = 'detective';
+        }
+
+        if (tasksEnabled) {
+            state.players.forEach(p => {
+                if (p.hasTasks) {
+                    const randomizedPool = [...selectedTasksPool];
+                    shuffleArray(randomizedPool);
+                    const assigned = randomizedPool.slice(0, taskConfigNum);
+                    p.tasks = assigned.map(text => ({ text: text, completed: false }));
+                } else {
+                    p.tasks = [];
+                }
+            });
+        }
+
+        shuffleArray(state.players);
+
+        state.revealIndex = 0;
+        prepareRevealScreen();
+        showView('reveal');
+    }
+
+    function showSetupError(msg) {
+        const errorDiv = document.getElementById('setup-error');
+        errorDiv.innerText = msg;
+        errorDiv.style.display = 'block';
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function isPasscodeValid(player, code) {
+        if (!code) return false;
+        const cleanedInput = code.trim();
+        return (cleanedInput === player.pin || cleanedInput === state.adminPasscode);
+    }
+
+    // 2. REVEAL SEQUENCE
+    function prepareRevealScreen() {
+        document.getElementById('reveal-pass-state').style.display = 'block';
+        document.getElementById('reveal-show-state').style.display = 'none';
+        
+        const currentPlayer = state.players[state.revealIndex];
+        document.getElementById('pass-target-name').innerText = currentPlayer.name;
+        document.getElementById('reveal-progress').innerText = `Player ${state.revealIndex + 1} of ${state.players.length}`;
+    }
+
+    function showPlayerRole() {
+        const currentPlayer = state.players[state.revealIndex];
+        const roleCard = document.getElementById('role-card-box');
+        const roleTitle = document.getElementById('role-display-title');
+        const roleDesc = document.getElementById('role-description');
+
+        document.getElementById('reveal-custom-pin').value = '';
+
+        if (currentPlayer.role === 'impostor') {
+            roleCard.className = 'reveal-box impostor-role';
+            roleTitle.className = 'role-text imp';
+            roleTitle.innerText = 'IMPOSTOR';
+            roleDesc.innerText = 'Blend in. Fake tasks to look busy. Quietly eliminate Crewmates without getting caught.';
+        } else if (currentPlayer.role === 'scientist') {
+            roleCard.className = 'reveal-box scientist-role';
+            roleTitle.className = 'role-text sci';
+            roleTitle.innerText = 'SCIENTIST';
+            roleDesc.innerText = 'You are a Crewmate. Access your vitals monitor to check player heartbeats.';
+        } else if (currentPlayer.role === 'detective') {
+            roleCard.className = 'reveal-box detective-role';
+            roleTitle.className = 'role-text det';
+            roleTitle.innerText = 'DETECTIVE';
+            roleDesc.innerText = 'You are a Crewmate. Access your footprint database to trace reported death locations.';
+        } else {
+            roleCard.className = 'reveal-box crewmate-role';
+            roleTitle.className = 'role-text crew';
+            roleTitle.innerText = 'CREWMATE';
+            roleDesc.innerText = 'Complete real-world tasks. Observe player patterns. Expose the Impostor.';
+        }
+
+        const taskBlock = document.getElementById('reveal-tasks-list-block');
+        const taskListUl = document.getElementById('reveal-assigned-tasks-ul');
+        taskListUl.innerHTML = '';
+
+        if (state.tasksEnabled) {
+            taskBlock.style.display = 'block';
+            if (!currentPlayer.hasTasks) {
+                document.getElementById('reveal-tasks-header').innerText = "Status:";
+                const li = document.createElement('li');
+                li.innerText = "NO TASKS ASSIGNED (Observe the crew and help solve the mystery!)";
+                li.style.color = "var(--accent)";
+                taskListUl.appendChild(li);
+            } else {
+                if (currentPlayer.role === 'impostor') {
+                    document.getElementById('reveal-tasks-header').innerText = "Assigned FAKE Tasks (Do not count to score):";
+                } else {
+                    document.getElementById('reveal-tasks-header').innerText = "Assigned REAL Tasks:";
+                }
+
+                currentPlayer.tasks.forEach(t => {
+                    const li = document.createElement('li');
+                    li.innerText = t.text;
+                    taskListUl.appendChild(li);
+                });
+            }
+        } else {
+            taskBlock.style.display = 'none';
+        }
+
+        document.getElementById('reveal-pass-state').style.display = 'none';
+        document.getElementById('reveal-show-state').style.display = 'block';
+    }
+
+    function hideAndAdvance() {
+        const pinValue = document.getElementById('reveal-custom-pin').value.trim();
+        if (pinValue.length !== 3 || isNaN(pinValue)) {
+            alert('Please specify a valid 3-digit numeric PIN.');
+            return;
+        }
+
+        const currentPlayer = state.players[state.revealIndex];
+        currentPlayer.pin = pinValue;
+
+        state.revealIndex++;
+        if (state.revealIndex < state.players.length) {
+            prepareRevealScreen();
+        } else {
+            initializeSelectSelectors();
+            updateDashboard();
+            showView('dashboard');
+        }
+    }
+
+    // 3. DASHBOARD OPERATIONS
+    function updateDashboard() {
+        const listContainer = document.getElementById('dashboard-player-list');
+        listContainer.innerHTML = '';
+
+        let aliveCrews = 0;
+        let aliveImps = 0;
+
+        state.players.forEach((player) => {
+            const isAlive = player.status === 'alive';
+            if (isAlive) {
+                if (player.role === 'impostor') aliveImps++;
+                else aliveCrews++;
+            }
+
+            const item = document.createElement('div');
+            item.className = `player-list-item ${!isAlive ? 'dead' : ''}`;
+            
+            const info = document.createElement('div');
+            info.className = 'player-info';
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'player-name';
+            nameSpan.innerText = player.name;
+            
+            const statusBadge = document.createElement('span');
+            statusBadge.className = `player-status-badge ${isAlive ? 'alive' : 'dead'}`;
+            statusBadge.innerText = isAlive ? 'Alive' : 'Eliminated / Dead';
+
+            info.appendChild(nameSpan);
+            info.appendChild(statusBadge);
+
+            const actionBtn = document.createElement('button');
+            actionBtn.className = 'kill-toggle-btn';
+
+            if (!state.isAdminAuthenticated) {
+                actionBtn.disabled = true;
+                actionBtn.className += ' btn-secondary';
+                actionBtn.innerText = '🔒 Admin';
+                actionBtn.style.opacity = '0.6';
+            } else {
+                actionBtn.disabled = false;
+                if (isAlive) {
+                    actionBtn.className += ' btn-danger';
+                    actionBtn.innerText = 'Report Dead';
+                    actionBtn.onclick = () => flagSilentDeath(player.name);
+                } else {
+                    actionBtn.className += ' btn-success';
+                    actionBtn.innerText = 'Revive';
+                    actionBtn.onclick = () => revivePlayer(player.name);
+                }
+            }
+
+            item.appendChild(info);
+            item.appendChild(actionBtn);
+            listContainer.appendChild(item);
+        });
+
+        document.getElementById('dash-crew-count').innerText = aliveCrews;
+        document.getElementById('dash-imp-count').innerText = aliveImps;
+
+        const authBtn = document.getElementById('admin-auth-toggle-btn');
+        const statusText = document.getElementById('admin-status-text');
+        if (state.isAdminAuthenticated) {
+            statusText.innerText = "UNLOCKED 🔓";
+            statusText.style.color = "var(--success)";
+            authBtn.innerText = "Lock Admin";
+            authBtn.className = "btn btn-danger";
+        } else {
+            statusText.innerText = "LOCKED 🔒";
+            statusText.style.color = "var(--impostor)";
+            authBtn.innerText = "Unlock";
+            authBtn.className = "btn btn-warning";
+        }
+
+        const progressBlock = document.getElementById('dash-task-progress-block');
+        const tasksBtn = document.getElementById('player-tasks-btn');
+        if (state.tasksEnabled) {
+            progressBlock.style.display = 'block';
+            tasksBtn.style.display = 'block';
+            updateGlobalTaskProgress();
+        } else {
+            progressBlock.style.display = 'none';
+            tasksBtn.style.display = 'none';
+        }
+
+        document.getElementById('scientist-vitals-btn').style.display = state.scientistCount > 0 ? 'block' : 'none';
+        document.getElementById('detective-clues-btn').style.display = state.detectiveCount > 0 ? 'block' : 'none';
+
+        checkGameConditions();
+    }
+
+    function flagSilentDeath(name) {
+        if (!state.isAdminAuthenticated) return;
+        
+        const p = state.players.find(x => x.name === name);
+        if (p && p.status === 'alive') {
+            p.status = 'dead';
+            if (!state.unannouncedDeaths.includes(name)) {
+                state.unannouncedDeaths.push(name);
+            }
+            updateDashboard();
+        }
+    }
+
+    function revivePlayer(name) {
+        if (!state.isAdminAuthenticated) return;
+        const p = state.players.find(x => x.name === name);
+        if (p) {
+            p.status = 'alive';
+            state.unannouncedDeaths = state.unannouncedDeaths.filter(n => n !== name);
+            updateDashboard();
+        }
+    }
+
+    function updateGlobalTaskProgress() {
+        if (!state.tasksEnabled) return;
+
+        let totalTasksCount = 0;
+        let completedTasksCount = 0;
+
+        state.players.forEach(p => {
+            if (p.role !== 'impostor' && p.hasTasks) {
+                p.tasks.forEach(t => {
+                    totalTasksCount++;
+                    if (t.completed) completedTasksCount++;
+                });
+            }
+        });
+
+        const progressPercent = totalTasksCount > 0 
+            ? Math.round((completedTasksCount / totalTasksCount) * 100) 
+            : 0;
+
+        document.getElementById('progress-percentage-text').innerText = `${progressPercent}% (${completedTasksCount}/${totalTasksCount})`;
+        document.getElementById('progress-bar-fill').style.width = `${progressPercent}%`;
+
+        if (progressPercent === 100 && totalTasksCount > 0) {
+            endGame('crewmates', 'TASKS COMPLETED');
+        }
+    }
+
+    function checkGameConditions() {
+        let aliveCrews = 0;
+        let aliveImps = 0;
+
+        state.players.forEach(p => {
+            if (p.status === 'alive') {
+                if (p.role === 'impostor') aliveImps++;
+                else aliveCrews++;
+            }
+        });
+
+        if (aliveImps === 0) {
+            endGame('crewmates', 'ALL IMPOSTORS ELIMINATED');
+        } else if (aliveImps >= aliveCrews) {
+            endGame('impostors', 'CREWMATES OUTNUMBERED');
+        }
+    }
+
+    function initializeSelectSelectors() {
+        const selectTaskPlayer = document.getElementById('task-select-player');
+        const selectReportFinder = document.getElementById('report-finder');
+        const selectReportVictim = document.getElementById('report-victim');
+        const selectVitalsPlayer = document.getElementById('vitals-select-player');
+        const selectDetectivePlayer = document.getElementById('clues-select-player');
+
+        selectTaskPlayer.innerHTML = '';
+        selectReportFinder.innerHTML = '';
+        selectReportVictim.innerHTML = '';
+        selectVitalsPlayer.innerHTML = '';
+        selectDetectivePlayer.innerHTML = '';
+
+        state.players.forEach(p => {
+            const opt1 = document.createElement('option');
+            opt1.value = p.name;
+            opt1.innerText = p.name;
+            selectTaskPlayer.appendChild(opt1);
+
+            const optFinder = document.createElement('option');
+            optFinder.value = p.name;
+            optFinder.innerText = p.name;
+            selectReportFinder.appendChild(optFinder);
+
+            const optVictim = document.createElement('option');
+            optVictim.value = p.name;
+            optVictim.innerText = p.name;
+            selectReportVictim.appendChild(optVictim);
+
+            if (p.role === 'scientist') {
+                const optSci = document.createElement('option');
+                optSci.value = p.name;
+                optSci.innerText = p.name;
+                selectVitalsPlayer.appendChild(optSci);
+            }
+            if (p.role === 'detective') {
+                const optDet = document.createElement('option');
+                optDet.value = p.name;
+                optDet.innerText = p.name;
+                selectDetectivePlayer.appendChild(optDet);
+            }
+        });
+    }
+
+    // MODAL: ADMIN ACCESS
+    function openAdminAuthModal() {
+        if (state.isAdminAuthenticated) {
+            state.isAdminAuthenticated = false;
+            updateDashboard();
+        } else {
+            document.getElementById('admin-pass-input').value = '';
+            document.getElementById('admin-auth-error').style.display = 'none';
+            document.getElementById('modal-admin-auth').classList.add('active');
+        }
+    }
+
+    function closeAdminAuthModal() {
+        document.getElementById('modal-admin-auth').classList.remove('active');
+    }
+
+    function submitAdminAuth() {
+        const input = document.getElementById('admin-pass-input').value;
+        const errorMsg = document.getElementById('admin-auth-error');
+
+        if (input === state.adminPasscode) {
+            state.isAdminAuthenticated = true;
+            closeAdminAuthModal();
+            updateDashboard();
+        } else {
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    // MODAL: RE-ROUTE TASK ACCESS
+    function openPlayerTasksAccessModal() {
+        document.getElementById('task-player-pin').value = '';
+        document.getElementById('player-task-error').style.display = 'none';
+        document.getElementById('modal-player-tasks-access').classList.add('active');
+    }
+
+    function closePlayerTasksAccessModal() {
+        document.getElementById('modal-player-tasks-access').classList.remove('active');
+    }
+
+    function verifyPlayerTasksPin() {
+        const selectedName = document.getElementById('task-select-player').value;
+        const enteredPin = document.getElementById('task-player-pin').value.trim();
+        const errorDiv = document.getElementById('player-task-error');
+
+        const foundPlayer = state.players.find(p => p.name === selectedName);
+
+        if (foundPlayer && isPasscodeValid(foundPlayer, enteredPin)) {
+            state.activeTaskEditingPlayer = foundPlayer;
+            closePlayerTasksAccessModal();
+            openPlayerTaskSheetModal();
+        } else {
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function openPlayerTaskSheetModal() {
+        const player = state.activeTaskEditingPlayer;
+        if (!player) return;
+
+        document.getElementById('task-sheet-title').innerText = `${player.name}'s Tasks`;
+        const subtitle = document.getElementById('task-sheet-subtitle');
+        
+        if (player.role === 'impostor') {
+            subtitle.innerText = "Impostor Fake Tasks: Do not check these off. Blend in with the crew!";
+            subtitle.style.color = "var(--impostor)";
+        } else if (!player.hasTasks) {
+            subtitle.innerText = "You have no tasks assigned this game. Focus on gathering evidence!";
+            subtitle.style.color = "var(--accent)";
+        } else {
+            subtitle.innerText = "Check off completed real life tasks.";
+            subtitle.style.color = "var(--text-muted)";
+        }
+
+        const container = document.getElementById('player-task-checkboxes');
+        container.innerHTML = '';
+
+        if (player.hasTasks) {
+            player.tasks.forEach((task, idx) => {
+                const li = document.createElement('li');
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `task-chk-${idx}`;
+                checkbox.checked = task.completed;
+                if (player.role === 'impostor') checkbox.disabled = true;
+
+                const label = document.createElement('label');
+                label.setAttribute('for', `task-chk-${idx}`);
+                label.innerText = task.text;
+                label.style.marginBottom = '0';
+                label.style.cursor = player.role === 'impostor' ? 'not-allowed' : 'pointer';
+
+                li.appendChild(checkbox);
+                li.appendChild(label);
+                container.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.innerText = "No tasks assigned to your player slot.";
+            container.appendChild(li);
+        }
+
+        document.getElementById('modal-player-tasks-sheet').classList.add('active');
+    }
+
+    function saveAndCloseTaskSheet() {
+        const player = state.activeTaskEditingPlayer;
+        if (player && player.role !== 'impostor' && player.hasTasks) {
+            player.tasks.forEach((task, idx) => {
+                const cb = document.getElementById(`task-chk-${idx}`);
+                if (cb) {
+                    task.completed = cb.checked;
+                }
+            });
+        }
+        
+        state.activeTaskEditingPlayer = null;
+        document.getElementById('modal-player-tasks-sheet').classList.remove('active');
+        updateDashboard();
+    }
+
+    // MODAL: REPORT BODY
+    function openReportBodyModal() {
+        const selectFinder = document.getElementById('report-finder');
+        const selectVictim = document.getElementById('report-victim');
+        
+        selectFinder.innerHTML = '';
+        selectVictim.innerHTML = '';
+
+        state.players.forEach(p => {
+            if (p.status === 'alive') {
+                const oFinder = document.createElement('option');
+                oFinder.value = p.name;
+                oFinder.innerText = p.name;
+                selectFinder.appendChild(oFinder);
+            } else {
+                const oVictim = document.createElement('option');
+                oVictim.value = p.name;
+                oVictim.innerText = p.name;
+                selectVictim.appendChild(oVictim);
+            }
+        });
+
+        document.getElementById('report-finder-code').value = '';
+        document.getElementById('report-location').value = '';
+        document.getElementById('report-error').style.display = 'none';
+
+        if (selectVictim.options.length === 0) {
+            alert("No deceased players currently marked. Use the Admin panel to flag someone as dead silently.");
+            return;
+        }
+
+        document.getElementById('modal-report-body').classList.add('active');
+    }
+
+    function closeReportBodyModal() {
+        document.getElementById('modal-report-body').classList.remove('active');
+    }
+
+    function submitBodyReport() {
+        const finderName = document.getElementById('report-finder').value;
+        const finderCode = document.getElementById('report-finder-code').value.trim();
+        const victimName = document.getElementById('report-victim').value;
+        const locationInput = document.getElementById('report-location').value.trim();
+        const errorDiv = document.getElementById('report-error');
+
+        const finderObj = state.players.find(p => p.name === finderName);
+        if (!finderObj || !isPasscodeValid(finderObj, finderCode)) {
+            errorDiv.innerText = "Authentication Failed. Incorrect PIN or Admin code.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (!victimName) {
+            errorDiv.innerText = "Please select a victim.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        const locationValue = locationInput || "Unknown Location";
+
+        state.clueDatabase.push({
+            victim: victimName,
+            location: locationValue
+        });
+
+        const victimObj = state.players.find(p => p.name === victimName);
+        if (victimObj) {
+            victimObj.status = 'dead';
+        }
+        state.unannouncedDeaths = state.unannouncedDeaths.filter(n => n !== victimName);
+
+        closeReportBodyModal();
+        triggerEmergencyMeeting(true); 
+    }
+
+    // MODAL: SCIENTIST VITALS ACCESS
+    function openVitalsAccessModal() {
+        const select = document.getElementById('vitals-select-player');
+        if (select.options.length === 0) {
+            alert("There are no active Scientists assigned in this session.");
+            return;
+        }
+        document.getElementById('vitals-player-pin').value = '';
+        document.getElementById('vitals-auth-error').style.display = 'none';
+        document.getElementById('modal-vitals-access').classList.add('active');
+    }
+
+    function closeVitalsAccessModal() {
+        document.getElementById('modal-vitals-access').classList.remove('active');
+    }
+
+    function verifyVitalsAccess() {
+        const sciName = document.getElementById('vitals-select-player').value;
+        const enteredPin = document.getElementById('vitals-player-pin').value.trim();
+        const errorDiv = document.getElementById('vitals-auth-error');
+
+        const foundPlayer = state.players.find(p => p.name === sciName);
+
+        if (foundPlayer && isPasscodeValid(foundPlayer, enteredPin)) {
+            state.activeScientistPlayer = foundPlayer;
+            closeVitalsAccessModal();
+            openVitalsDisplay();
+        } else {
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function openVitalsDisplay() {
+        const scientist = state.activeScientistPlayer;
+        const grid = document.getElementById('vitals-container-grid');
+        const chargesLabel = document.getElementById('vitals-charges-left');
+        
+        grid.innerHTML = '';
+
+        if (!scientist) return;
+
+        const isAdminCode = (scientist.pin !== document.getElementById('vitals-player-pin').value.trim());
+        const remainingCharges = state.maxVitalsCharges - scientist.scansUsed;
+
+        if (remainingCharges <= 0 && !isAdminCode) {
+            alert("Vitals Screen Battery Depleted!");
+            return;
+        }
+
+        if (!isAdminCode) {
+            scientist.scansUsed++;
+        }
+
+        chargesLabel.innerText = isAdminCode ? "Admin Access: Unlimited Scans" : `Scans Remaining: ${state.maxVitalsCharges - scientist.scansUsed}`;
+
+        state.players.forEach(p => {
+            const vital = document.createElement('div');
+            const isAlive = p.status === 'alive';
+            vital.className = `vital-card ${isAlive ? 'alive' : 'dead'}`;
+            vital.innerHTML = `
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--text-color);">${p.name}</div>
+                <div style="margin-top:5px; font-weight:bold; font-size:0.8rem; text-transform:uppercase;">
+                    ${isAlive ? '🟢 Heartbeat Normal' : '🔴 No Signal'}
+                </div>
+            `;
+            grid.appendChild(vital);
+        });
+
+        document.getElementById('modal-vitals-display').classList.add('active');
+    }
+
+    function closeVitalsDisplay() {
+        state.activeScientistPlayer = null;
+        document.getElementById('modal-vitals-display').classList.remove('active');
+        updateDashboard();
+    }
+
+    // MODAL: DETECTIVE FOOTPRINT/CLUES ACCESS
+    function openDetectiveCluesAccessModal() {
+        const select = document.getElementById('clues-select-player');
+        if (select.options.length === 0) {
+            alert("There are no active Detectives assigned in this session.");
+            return;
+        }
+        document.getElementById('clues-player-pin').value = '';
+        document.getElementById('clues-auth-error').style.display = 'none';
+        document.getElementById('modal-detective-clues-access').classList.add('active');
+    }
+
+    function closeDetectiveCluesAccessModal() {
+        document.getElementById('modal-detective-clues-access').classList.remove('active');
+    }
+
+    function verifyDetectiveAccess() {
+        const detName = document.getElementById('clues-select-player').value;
+        const enteredPin = document.getElementById('clues-player-pin').value.trim();
+        const errorDiv = document.getElementById('clues-auth-error');
+
+        const foundPlayer = state.players.find(p => p.name === detName);
+
+        if (foundPlayer && isPasscodeValid(foundPlayer, enteredPin)) {
+            closeDetectiveCluesAccessModal();
+            openDetectiveCluesDisplay();
+        } else {
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function openDetectiveCluesDisplay() {
+        const list = document.getElementById('clue-tracker-list');
+        list.innerHTML = '';
+
+        if (state.clueDatabase.length === 0) {
+            const li = document.createElement('li');
+            li.innerText = "No clues reported. The directory is empty.";
+            li.style.color = "var(--text-muted)";
+            list.appendChild(li);
+        } else {
+            state.clueDatabase.forEach(clue => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span><strong>${clue.victim}'s</strong> footprint found:</span> <span style="color:var(--accent); font-weight:bold;">${clue.location}</span>`;
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById('modal-detective-clues-display').classList.add('active');
+    }
+
+    function closeDetectiveCluesDisplay() {
+        document.getElementById('modal-detective-clues-display').classList.remove('active');
+    }
+
+    // EMERGENCY MEETINGS & VOTES
+    function triggerEmergencyMeeting(isReport = false) {
+        const alivePlayers = state.players.filter(p => p.status === 'alive');
+        if (alivePlayers.length === 0) return;
+
+        if (isReport) {
+            playReportSound();
+        } else {
+            playSirenAlarm();
+        }
+
+        const alertBox = document.getElementById('meeting-discovery-alert');
+        const alertNames = document.getElementById('meeting-discovery-names');
+        if (state.unannouncedDeaths.length > 0) {
+            alertNames.innerText = state.unannouncedDeaths.join(', ');
+            alertBox.style.display = 'block';
+            state.unannouncedDeaths = [];
+        } else {
+            alertBox.style.display = 'none';
+        }
+
+        state.votingIndex = 0;
+        state.votes = {};
+        state.selectedVoteTarget = null;
+
+        presentVoter();
+        showView('meeting');
+    }
+
+    function presentVoter() {
+        const alivePlayers = state.players.filter(p => p.status === 'alive');
+        const currentVoter = alivePlayers[state.votingIndex];
+
+        document.getElementById('current-voter-name').innerText = currentVoter.name;
+        document.getElementById('voting-progress').innerText = `Voter ${state.votingIndex + 1} of ${alivePlayers.length}`;
+
+        const choicesContainer = document.getElementById('voting-choices');
+        choicesContainer.innerHTML = '';
+        state.selectedVoteTarget = null;
+
+        alivePlayers.forEach(p => {
+            if (p.name !== currentVoter.name) {
+                const card = createVotingCard(p.name, p.name);
+                choicesContainer.appendChild(card);
+            }
+        });
+
+        const skipCard = createVotingCard('Skip Vote', 'skip');
+        choicesContainer.appendChild(skipCard);
+    }
+
+    function createVotingCard(label, targetVal) {
+        const card = document.createElement('div');
+        card.className = 'voting-option-card';
+        card.innerText = label;
+        
+        card.onclick = function() {
+            const cards = document.querySelectorAll('.voting-option-card');
+            cards.forEach(c => c.classList.remove('selected'));
+            
+            card.classList.add('selected');
+            state.selectedVoteTarget = targetVal;
+        };
+        
+        return card;
+    }
+
+    function submitVote() {
+        if (state.selectedVoteTarget === null) {
+            alert('Please select an option or vote to skip.');
+            return;
+        }
+
+        const alivePlayers = state.players.filter(p => p.status === 'alive');
+        const currentVoter = alivePlayers[state.votingIndex];
+
+        state.votes[currentVoter.name] = state.selectedVoteTarget;
+
+        state.votingIndex++;
+        if (state.votingIndex < alivePlayers.length) {
+            presentVoter();
+        } else {
+            tallyVotes();
+        }
+    }
+
+    function tallyVotes() {
+        const alivePlayers = state.players.filter(p => p.status === 'alive');
+        const voteCounts = {};
+
+        alivePlayers.forEach(p => { voteCounts[p.name] = 0; });
+        voteCounts['skip'] = 0;
+
+        Object.values(state.votes).forEach(target => {
+            if (voteCounts[target] !== undefined) {
+                voteCounts[target]++;
+            }
+        });
+
+        let highestVoteCount = -1;
+        let targetsWithHighest = [];
+
+        Object.keys(voteCounts).forEach(target => {
+            const count = voteCounts[target];
+            if (count > highestVoteCount) {
+                highestVoteCount = count;
+                targetsWithHighest = [target];
+            } else if (count === highestVoteCount) {
+                targetsWithHighest.push(count);
+                targetsWithHighest.push(target);
+            }
+        });
+
+        let outcomeText = '';
+        let subText = '';
+
+        if (targetsWithHighest.length > 1) {
+            outcomeText = "No one was ejected (Tie)";
+            subText = "The voting ended in a tie. No consensus was found.";
+        } else {
+            const topTarget = targetsWithHighest[0];
+            if (topTarget === 'skip') {
+                outcomeText = "No one was ejected (Skipped)";
+                subText = "The crew voted to skip expulsion.";
+            } else if (highestVoteCount === 0) {
+                outcomeText = "No one was ejected (No votes)";
+                subText = "No votes were recorded.";
+            } else {
+                const ejectedPlayer = state.players.find(p => p.name === topTarget);
+                ejectedPlayer.status = 'dead';
+                
+                outcomeText = `${topTarget} was ejected!`;
+                subText = ejectedPlayer.role === 'impostor' 
+                    ? "They were an IMPOSTOR." 
+                    : "They were not an Impostor.";
+            }
+        }
+
+        document.getElementById('outcome-main-text').innerText = outcomeText;
+        document.getElementById('outcome-sub-text').innerText = subText;
+
+        const breakdownList = document.getElementById('vote-breakdown-list');
+        breakdownList.innerHTML = '';
+
+        Object.keys(state.votes).forEach(voter => {
+            const target = state.votes[voter];
+            const li = document.createElement('li');
+            li.innerHTML = `<span><strong>${voter}</strong> voted for:</span> <span>${target === 'skip' ? 'Skip' : target}</span>`;
+            breakdownList.appendChild(li);
+        });
+
+        showView('outcome');
+    }
+
+    function proceedAfterMeeting() {
+        updateDashboard();
+        const currentViewActive = Object.keys(views).find(k => views[k].classList.contains('active'));
+        if (currentViewActive !== 'gameover') {
+            showView('dashboard');
+        }
+    }
+
+    // GAME OVER
+    function endGame(winner, reason) {
+        state.winner = winner;
+        const mainTitle = document.getElementById('gameover-title');
+        const winnerType = document.getElementById('gameover-winner-type');
+        
+        if (winner === 'crewmates') {
+            mainTitle.innerText = "VICTORY";
+            mainTitle.style.color = "var(--success)";
+            winnerType.innerText = reason ? `CREWMATES WIN: ${reason}` : "CREWMATES WIN";
+        } else {
+            mainTitle.innerText = "DEFEAT";
+            mainTitle.style.color = "var(--impostor)";
+            winnerType.innerText = reason ? `IMPOSTORS WIN: ${reason}` : "IMPOSTORS WIN";
+        }
+
+        const summaryContainer = document.getElementById('gameover-player-list');
+        summaryContainer.innerHTML = '';
+
+        state.players.forEach(p => {
+            const li = document.createElement('li');
+            let roleDisplayColor = 'var(--crewmate)';
+            if (p.role === 'impostor') roleDisplayColor = 'var(--impostor)';
+            else if (p.role === 'scientist') roleDisplayColor = 'var(--purple)';
+            else if (p.role === 'detective') roleDisplayColor = 'var(--accent)';
+            
+            let completedText = '';
+            if (state.tasksEnabled && p.role !== 'impostor' && p.hasTasks) {
+                const completedCount = p.tasks.filter(t => t.completed).length;
+                completedText = ` (${completedCount}/${state.tasksPerPlayer} tasks)`;
+            } else if (state.tasksEnabled && !p.hasTasks && p.role !== 'impostor') {
+                completedText = ' (No Tasks)';
+            }
+
+            li.innerHTML = `
+                <span><strong>${p.name}</strong>${completedText}</span>
+                <span style="color:${roleDisplayColor}; font-weight:bold;">${p.role.toUpperCase()} (${p.status.toUpperCase()})</span>
+            `;
+            summaryContainer.appendChild(li);
+        });
+
+        showView('gameover');
+    }
+
+    function resetToSetup(retainPlayers) {
+        if (retainPlayers) {
+            const originalNames = state.players.map(p => p.name).join('\n');
+            document.getElementById('player-input').value = originalNames;
+            proceedToCustomization();
+        } else {
+            showView('setup');
+        }
+    }
+
+    function confirmEndGame() {
+        if (confirm("Are you sure you want to end the current game?")) {
+            showView('setup');
+        }
+    }
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered.', reg))
+                .catch(err => console.log('Service Worker registration failed.', err));
+        });
+    }
+</script>
+
+</body>
+</html>
