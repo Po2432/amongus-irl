@@ -61,6 +61,14 @@ const premadeTaskSets = {
     ]
 };
 
+// Helper utility to randomize arrays
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 function initAudioContext() {
     if (!state.audioCtx) {
         state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
