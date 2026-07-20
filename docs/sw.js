@@ -1,7 +1,9 @@
-const CACHE_NAME = 'among-us-irl-v2';
+const CACHE_NAME = 'among-us-irl-v3';
 const ASSETS = [
   './',
   './index.html',
+  './css/style.css',
+  './js/app.js',
   './manifest.json',
   './icon.svg'
 ];
@@ -35,7 +37,6 @@ self.addEventListener('fetch', (e) => {
         return cachedResponse;
       }
       return fetch(e.request).catch(() => {
-        // Fallback to cached index.html for navigation requests when offline
         if (e.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
