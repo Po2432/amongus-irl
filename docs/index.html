@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Among Us IRL Companion</title>
-    <!-- Web App Capabilities & Mobile Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0b0e14">
@@ -28,7 +27,6 @@
             --safe-area-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        /* Prevent system zoom & scrolling behaviors on mobile */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -40,7 +38,6 @@
             user-select: none;
         }
 
-        /* Allow inputs to be selectable */
         input, textarea, select {
             -webkit-user-select: text;
             user-select: text;
@@ -95,7 +92,6 @@
             display: block;
         }
 
-        /* Form elements optimized for mobile touch targets */
         label {
             display: block;
             margin-bottom: 6px;
@@ -115,13 +111,14 @@
             margin-bottom: 16px;
             outline: none;
             transition: border-color 0.2s;
-            -webkit-appearance: none; /* Reset iOS styling */
+            -webkit-appearance: none;
         }
 
         textarea:focus, input:focus, select:focus {
             border-color: var(--crewmate);
         }
 
+        /* Fixed Custom Checkbox Styles */
         .checkbox-container {
             display: flex;
             align-items: center;
@@ -133,14 +130,35 @@
             cursor: pointer;
         }
 
-        .checkbox-container input {
-            width: 20px;
-            height: 20px;
-            margin-bottom: 0;
+        .checkbox-container input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            background-color: var(--bg-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
             cursor: pointer;
+            margin-bottom: 0;
         }
 
-        /* Mobile Action Buttons (Min height 48px for iOS/Android guidelines) */
+        .checkbox-container input[type="checkbox"]:checked {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+
+        .checkbox-container input[type="checkbox"]:checked::after {
+            content: "✓";
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Buttons */
         .btn {
             display: flex;
             justify-content: center;
@@ -332,6 +350,18 @@
             min-height: 36px;
         }
 
+        /* Action banners */
+        .sabotage-alert-banner {
+            background: var(--impostor);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid white;
+        }
+
         .action-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -344,18 +374,6 @@
             padding: 10px;
             font-size: 0.8rem;
             min-height: 44px;
-        }
-
-        .voter-header {
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        
-        .voting-options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 16px;
         }
 
         .voting-option-card {
@@ -398,9 +416,7 @@
             font-size: 0.85rem;
         }
 
-        .text-center { text-align: center; }
-
-        /* Overlays & Modals */
+        /* Overlays */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -429,28 +445,6 @@
             overflow-y: auto;
         }
 
-        .task-list-check {
-            list-style: none;
-            margin: 12px 0;
-        }
-
-        .task-list-check li {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px;
-            background: var(--bg-color);
-            margin-bottom: 8px;
-            border-radius: 6px;
-        }
-
-        .task-list-check input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
-            margin-bottom: 0;
-            cursor: pointer;
-        }
-
         .vitals-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -477,7 +471,7 @@
     <!-- 1. SETUP VIEW -->
     <div id="view-setup" class="view active">
         <h1>Among Us IRL</h1>
-        <p>Coordinate real-world tasks, track vitals, and solve the investigation.</p>
+        <p>Coordinate real-world tasks, track vitals, and execute sabotages.</p>
         
         <div id="setup-error" class="error-message"></div>
 
@@ -487,20 +481,36 @@
         <label for="impostor-count">Number of Impostors</label>
         <input type="number" id="impostor-count" min="1" value="1">
 
-        <label for="admin-passcode">Admin Password (Master Override)</label>
+        <label for="admin-passcode">Admin Password</label>
         <input type="text" id="admin-passcode" value="admin">
 
         <h3 style="text-align: left; margin-top: 15px; font-size: 1rem; color: var(--accent);">Special Roles</h3>
         
-        <label for="scientist-count">Scientists (Access Vitals)</label>
+        <label for="scientist-count">Scientists (Vitals Monitor)</label>
         <input type="number" id="scientist-count" min="0" value="0">
 
-        <label for="detective-count">Detectives (Trace discovery locations)</label>
+        <label for="detective-count">Detectives (Clue Directory)</label>
         <input type="number" id="detective-count" min="0" value="0">
 
-        <div class="checkbox-container" onclick="toggleTaskSetupView()">
-            <input type="checkbox" id="enable-tasks-toggle" checked onclick="event.stopPropagation(); toggleTaskSetupView();">
-            <label style="margin-bottom: 0; cursor: pointer;">Enable Tasks System</label>
+        <h3 style="text-align: left; margin-top: 15px; font-size: 1rem; color: var(--accent);">Meeting Constraints</h3>
+        <label for="cooldown-input">Emergency Meeting Cooldown (seconds)</label>
+        <input type="number" id="cooldown-input" min="0" value="45">
+
+        <label for="max-meetings-input">Max Emergency Meetings Per Player</label>
+        <input type="number" id="max-meetings-input" min="1" value="2">
+
+        <h3 style="text-align: left; margin-top: 15px; font-size: 1rem; color: var(--accent);">Task Selection</h3>
+        <label for="task-set-dropdown">Premade Turkish Task Sets</label>
+        <select id="task-set-dropdown" onchange="loadPremadeTaskSet()">
+            <option value="custom">Custom Task List (Type below)</option>
+            <option value="ev">Ev Görevleri (House Tasks - Standard)</option>
+            <option value="plaj">Plaj Görevleri (Beach Tasks - Large Space Spreader)</option>
+            <option value="bahce">Bahçe Görevleri (Garden Tasks - High Separation)</option>
+        </select>
+
+        <div class="checkbox-container">
+            <input type="checkbox" id="enable-tasks-toggle" checked onclick="toggleTaskSetupView()">
+            <label for="enable-tasks-toggle" style="margin-bottom: 0; cursor: pointer;">Enable Tasks System</label>
         </div>
 
         <div id="task-setup-details">
@@ -508,7 +518,7 @@
             <input type="number" id="tasks-per-player" min="1" max="10" value="3">
 
             <label for="task-pool-input">Global Task Pool (One per line)</label>
-            <textarea id="task-pool-input" rows="4" placeholder="Empty the recycling bin&#10;Wipe down the table&#10;Do 10 jumping jacks&#10;Stack 5 books alphabetically&#10;Drink a glass of water&#10;Touch the front door and back door"></textarea>
+            <textarea id="task-pool-input" rows="4"></textarea>
         </div>
 
         <button class="btn btn-primary" onclick="proceedToCustomization()">Configure Players</button>
@@ -517,13 +527,13 @@
     <!-- 1B. CUSTOMIZATION/EXCLUSIONS VIEW -->
     <div id="view-customization" class="view">
         <h2>Player Exclusions</h2>
-        <p>Deselect players who should have <strong>No Tasks</strong>. Rest of the roles remain randomized.</p>
+        <p>Uncheck players who should have <strong>No Tasks</strong>.</p>
         
         <div id="custom-players-list-container" style="margin-bottom: 20px;">
-            <!-- Rendered dynamically -->
+            <!-- Loaded dynamically -->
         </div>
 
-        <button class="btn btn-primary" onclick="initiateSetup()">Start Game & Distribute Roles</button>
+        <button class="btn btn-primary" onclick="initiateSetup()">Start Game</button>
         <button class="btn btn-secondary" onclick="showView('setup')">Back</button>
     </div>
 
@@ -537,19 +547,18 @@
                 <span class="pass-instructions">Pass device to:</span>
                 <span id="pass-target-name" class="target-name">Player Name</span>
             </div>
-            <button class="btn btn-warning" onclick="showPlayerRole()">I am this player, show my role</button>
+            <button class="btn btn-warning" onclick="showPlayerRole()">Reveal My Role</button>
         </div>
 
         <div id="reveal-show-state" style="display: none;">
             <p class="text-center">Do not show others!</p>
             <div id="role-card-box" class="reveal-box">
                 <div id="role-display-title" class="role-text">CREWMATE</div>
-                <p id="role-description">Complete tasks and find the Impostor.</p>
+                <p id="role-description"></p>
                 
                 <div style="margin-top: 15px;">
-                    <label for="reveal-custom-pin">Configure Your Secret 3-Digit Access PIN:</label>
+                    <label for="reveal-custom-pin">Configure Your 3-Digit Access PIN:</label>
                     <input type="password" id="reveal-custom-pin" pattern="[0-9]*" inputmode="numeric" maxlength="3" style="max-width: 140px; text-align: center; font-size: 1.4rem; letter-spacing: 5px; margin-bottom: 10px;">
-                    <p style="font-size: 0.8rem; color: var(--accent);">Remember this PIN to submit reports and access special screens.</p>
                 </div>
 
                 <div id="reveal-tasks-list-block" style="text-align: left; margin-top: 15px; background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px;">
@@ -559,7 +568,7 @@
                     </ul>
                 </div>
             </div>
-            <button class="btn btn-secondary" onclick="hideAndAdvance()">I have configured my PIN, hide role</button>
+            <button class="btn btn-secondary" onclick="hideAndAdvance()">Hide & Next</button>
         </div>
 
         <p class="text-center" id="reveal-progress" style="margin-top: 15px; font-weight: bold;"></p>
@@ -569,9 +578,14 @@
     <div id="view-dashboard" class="view">
         <h2>Dashboard</h2>
 
+        <div id="sabotage-indicator" class="sabotage-alert-banner" style="display: none;">
+            ⚠️ ACTIVE SABOTAGE: <span id="sabotage-banner-text">None</span><br>
+            <button class="btn btn-secondary" style="margin-top: 8px; min-height: 36px; padding: 4px;" onclick="openResolveSabotageModal()">Resolve Sabotage</button>
+        </div>
+
         <div class="progress-container" id="dash-task-progress-block">
             <div class="progress-header">
-                <span>Task Completion Tracker</span>
+                <span>Task Progress</span>
                 <span id="progress-percentage-text">0%</span>
             </div>
             <div class="progress-bar-bg">
@@ -590,25 +604,36 @@
         </div>
 
         <div class="action-grid">
-            <button class="btn btn-danger" onclick="triggerEmergencyMeeting()">📢 Emergency</button>
+            <button class="btn btn-danger" id="dash-emergency-btn" onclick="openCallMeetingModal()">📢 Emergency</button>
             <button class="btn btn-purple" onclick="openReportBodyModal()">🚨 Report Body</button>
             <button class="btn btn-success" id="player-tasks-btn" onclick="openPlayerTasksAccessModal()">🛠️ My Tasks</button>
             <button class="btn btn-secondary" id="scientist-vitals-btn" onclick="openVitalsAccessModal()">🩺 Vitals</button>
             <button class="btn btn-warning" id="detective-clues-btn" onclick="openDetectiveCluesAccessModal()" style="grid-column: span 2;">🔍 Footprint Tracker</button>
+            <button class="btn btn-danger" id="impostor-sabotage-btn" onclick="openSabotageTriggerModal()" style="grid-column: span 2; background-color: darkred;">⚡ Trigger Sabotage</button>
         </div>
 
         <h3 style="text-align: left; font-size: 1rem; margin-bottom: 8px;">Player Status List</h3>
         <div id="dashboard-player-list">
-            <!-- Rendered dynamically -->
+            <!-- Dynamic elements -->
         </div>
 
         <button class="btn btn-secondary" style="margin-top: 20px;" onclick="confirmEndGame()">End Game / Reset</button>
     </div>
 
-    <!-- 4. EMERGENCY MEETING VIEW (VOTING) -->
+    <!-- 4. EMERGENCY MEETING VIEW -->
     <div id="view-meeting" class="view">
-        <h2 id="meeting-title" style="color: var(--impostor);">⚠️ Emergency Meeting</h2>
+        <h2 id="meeting-title" style="color: var(--impostor);">⚠️ Meeting Convened</h2>
         
+        <div style="background: rgba(30, 144, 255, 0.1); border: 2px solid var(--crewmate); padding: 12px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
+            <p style="margin-bottom: 4px; font-weight: bold; color: var(--text-color);">Reporter / Convenor:</p>
+            <p id="meeting-reporter-name" style="font-weight: bold; font-size: 1.2rem; color: var(--accent); margin-bottom: 0;">Unreported</p>
+        </div>
+
+        <div id="meeting-reported-dead-block" style="display:none; background: rgba(155, 89, 182, 0.15); border: 2px solid var(--purple); padding: 12px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
+            <p style="margin-bottom: 4px; font-weight: bold; color: var(--text-color);">Reported Dead Body:</p>
+            <p id="meeting-victim-name" style="font-weight: bold; font-size: 1.2rem; color: var(--impostor); margin-bottom: 0;"></p>
+        </div>
+
         <div id="meeting-discovery-alert" style="display:none; background: rgba(255, 71, 87, 0.15); border: 2px solid var(--impostor); padding: 12px; border-radius: 8px; margin-bottom: 16px; text-align: center;">
             <h3 style="color: var(--impostor); margin-bottom: 4px; font-size: 1rem;">⚠️ Unannounced Dead Discovered!</h3>
             <p id="meeting-discovery-names" style="font-weight: bold; font-size: 0.9rem; color: var(--text-color); margin-bottom: 0;"></p>
@@ -620,7 +645,7 @@
         </div>
 
         <div class="voting-options-container" id="voting-choices">
-            <!-- Dynamic selection items -->
+            <!-- Dynamically populated -->
         </div>
 
         <button class="btn btn-primary" onclick="submitVote()">Confirm Vote</button>
@@ -651,7 +676,7 @@
 
         <h3>Final Role List</h3>
         <ul id="gameover-player-list" class="summary-list">
-            <!-- Dynamic final summary -->
+            <!-- Dynamic elements -->
         </ul>
 
         <button class="btn btn-primary" onclick="resetToSetup(true)" style="margin-top: 20px;">Play Again (Same Players)</button>
@@ -660,11 +685,83 @@
 
     <!-- ================= MODALS ================= -->
 
+    <!-- MODAL: DETAILED CALL EMERGENCY CONVENING -->
+    <div class="modal-overlay" id="modal-call-meeting">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 12px;">Call Emergency Meeting</h3>
+            <p>Select who is initiating the meeting. Your individual meeting limit applies.</p>
+            
+            <label for="meeting-initiator-select">Who calls the meeting?</label>
+            <select id="meeting-initiator-select"></select>
+
+            <label for="meeting-initiator-code">Your PIN / Admin Code</label>
+            <input type="password" id="meeting-initiator-code" pattern="[0-9]*" inputmode="numeric" placeholder="3-digit PIN">
+
+            <div id="meeting-call-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Error.</div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="closeCallMeetingModal()">Cancel</button>
+                <button class="btn btn-danger" style="margin-bottom: 0;" onclick="submitCallEmergencyMeeting()">Call Meeting</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SABOTAGE TRIGGER (FOR IMPOSTORS & ADMIN) -->
+    <div class="modal-overlay" id="modal-sabotage-trigger">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 12px; color: var(--impostor);">⚡ Trigger Sabotage</h3>
+            <p>Enter your Impostor PIN or the Admin passcode to disrupt the ship.</p>
+            
+            <label for="sab-trigger-player">Player triggering sabotage</label>
+            <select id="sab-trigger-player"></select>
+
+            <label for="sab-trigger-code">PIN / Admin Code</label>
+            <input type="password" id="sab-trigger-code" pattern="[0-9]*" inputmode="numeric" placeholder="PIN / Admin Code">
+
+            <label for="sab-type-select">Sabotage Target</label>
+            <select id="sab-type-select">
+                <option value="oksijen">Oksijen Odası Sabotajı (Oxygen Depletion)</option>
+                <option value="isiklar">Elektrik Sabotajı (Lights Out)</option>
+                <option value="iletisim">İletişim Sabotajı (Comms Offline)</option>
+                <option value="reaktor">Reaktör Meltdown (Reactor Critical)</option>
+            </select>
+
+            <div id="sabotage-trigger-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Invalid PIN or Admin passcode.</div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="closeSabotageTriggerModal()">Cancel</button>
+                <button class="btn btn-danger" style="margin-bottom: 0;" onclick="submitSabotageTrigger()">Trigger</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RESOLVE SABOTAGE -->
+    <div class="modal-overlay" id="modal-sabotage-resolve">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 12px; color: var(--success);">🛠️ Resolve Active Sabotage</h3>
+            <p id="sabotage-resolve-instructions" style="font-weight: bold; margin-bottom: 15px; color: var(--accent);"></p>
+            <p>Perform the instructions, then enter your PIN (any Crewmate, Scientist, Detective) or the Admin passcode to mark as resolved.</p>
+
+            <label for="sab-resolve-player">Who is resolving?</label>
+            <select id="sab-resolve-player"></select>
+
+            <label for="sab-resolve-code">PIN / Admin Code</label>
+            <input type="password" id="sab-resolve-code" pattern="[0-9]*" inputmode="numeric" placeholder="PIN">
+
+            <div id="sabotage-resolve-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Incorrect PIN.</div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="closeResolveSabotageModal()">Cancel</button>
+                <button class="btn btn-success" style="margin-bottom: 0;" onclick="submitSabotageResolve()">Resolved</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: ADMIN LOGIN -->
     <div class="modal-overlay" id="modal-admin-auth">
         <div class="modal-content">
             <h3 style="margin-bottom: 12px;">Unlock Admin Console</h3>
-            <p>Enter the game admin passcode to override player settings and statuses.</p>
+            <p>Enter the game admin passcode to override settings and statuses.</p>
             <input type="password" id="admin-pass-input" placeholder="Password">
             <div id="admin-auth-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Incorrect passcode.</div>
             <div style="display: flex; gap: 10px;">
@@ -689,7 +786,7 @@
             <label for="report-victim">Who was found dead?</label>
             <select id="report-victim"></select>
 
-            <label for="report-location">Location of Discovery (e.g. Kitchen, Hallway)</label>
+            <label for="report-location">Location of Discovery (e.g. Kitchen, Garden edge)</label>
             <input type="text" id="report-location" placeholder="Where was the body found?">
 
             <div id="report-error" style="color: var(--impostor); margin-bottom: 10px; font-weight: bold; font-size: 0.8rem; display: none;">Validation error. Check code/inputs.</div>
@@ -740,7 +837,7 @@
     <div class="modal-overlay" id="modal-vitals-access">
         <div class="modal-content">
             <h3 style="margin-bottom: 12px; color: var(--purple);">🩺 Access Vitals</h3>
-            <p>Enter a Scientist's PIN or Admin code to view crew vital monitors.</p>
+            <p>Enter a Scientist's PIN or Admin code.</p>
             
             <label for="vitals-select-player">Scientist Name</label>
             <select id="vitals-select-player"></select>
@@ -774,8 +871,8 @@
     <!-- MODAL: DETECTIVE FOOTPRINT/CLUES ACCESS -->
     <div class="modal-overlay" id="modal-detective-clues-access">
         <div class="modal-content">
-            <h3 style="margin-bottom: 12px; color: var(--accent);">🔍 Footprint Tracker Access</h3>
-            <p>Enter a Detective's PIN or Admin code to view the reported death footprints database.</p>
+            <h3 style="margin-bottom: 12px; color: var(--accent);">🔍 Footprint Tracker</h3>
+            <p>Enter a Detective's PIN or Admin code to view reported footprint clues.</p>
             
             <label for="clues-select-player">Detective Name</label>
             <select id="clues-select-player"></select>
@@ -809,9 +906,9 @@
 </div>
 
 <script>
-    // App State Configuration
+    // State Model
     let state = {
-        players: [], // { name, role, status, pin, hasTasks, tasks, scansUsed }
+        players: [], // { name, role, status, pin, hasTasks: true, tasks: [], meetingsCalled: 0, scansUsed: 0 }
         impostorCount: 1,
         scientistCount: 0,
         detectiveCount: 0,
@@ -825,11 +922,20 @@
         votes: {}, 
         selectedVoteTarget: null,
         audioCtx: null,
-        activeTaskEditingPlayer: null,
-        activeScientistPlayer: null,
+        activeTaskEditingPlayerName: null, 
+        activeScientistPlayerName: null, 
         clueDatabase: [], 
         unannouncedDeaths: [], 
-        maxVitalsCharges: 5
+        maxVitalsCharges: 5,
+        
+        // Cooldown and Max Meeting constraint structures
+        meetingCooldown: 45,
+        maxMeetingsPerPlayer: 2,
+        lastMeetingTime: 0, // epoch ms
+        currentView: 'setup',
+
+        // Sabotages sub-states
+        activeSabotage: null // 'oksijen', 'isiklar', 'iletisim', 'reaktor'
     };
 
     const views = {
@@ -842,7 +948,88 @@
         gameover: document.getElementById('view-gameover')
     };
 
+    const premadeTaskSets = {
+        ev: [
+            "Balkona çık ve dışarıdaki en yüksek ağaca 10 saniye boyunca bak.",
+            "Evin giriş kapısına git, anahtarı kilide sokup çıkar.",
+            "En uzak odadaki kitaplıktan mavi kapaklı bir kitap bulup yerini değiştir.",
+            "Mutfağa gidip bir bardak su doldur ve yavaşça iç.",
+            "Banyodaki aynaya bakıp kendine göz kırp ve geri dön.",
+            "Koridorda 10 adım boyunca çizgileri ezmeden parmak ucunda yürü."
+        ],
+        plaj: [
+            "Dalgaların ulaştığı en uzak ıslak kum noktasına git ve orada 5 saniye bekle.",
+            "Plaj alanının en uç köşesindeki kayalığa git ve elini dokundur.",
+            "En uzaktaki cankurtaran kulesi ya da şemsiyeye doğru 20 adım yürü.",
+            "Kuru kum üzerinde en az 10 adım geri geri izini takip ederek yürü.",
+            "Deniz kabuğu ya da pürüzsüz yuvarlak bir taş bulup plajın batı sınırına bırak."
+        ],
+        bahce: [
+            "Bahçenin en uzak dış sınır köşesine git ve oradaki en büyük yaprağa dokun.",
+            "Bahçe hortumunun veya sulama vanasının yanına git ve sızıntı kontrolü yap.",
+            "En uzaktaki ağaç gövdesine dokun ve rüzgarı hissedene kadar 10 saniye bekle.",
+            "Giriş bahçe kapısına yürü, dışarıya 5 saniye bakıp geri dön.",
+            "Yerden 3 farklı şekle sahip taş topla ve onları en güney köşeye diz."
+        ]
+    };
+
+    // Auto-initialize Audio Context on first touch/click
+    function initAudioContext() {
+        if (!state.audioCtx) {
+            state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            console.log("Audio Context generated successfully.");
+        }
+        if (state.audioCtx.state === 'suspended') {
+            state.audioCtx.resume();
+        }
+    }
+    document.body.addEventListener('click', initAudioContext, { once: true });
+    document.body.addEventListener('touchstart', initAudioContext, { once: true });
+
+    // Local Storage Serialization
+    function saveState() {
+        localStorage.setItem('AmongUsIRL_Companion_State', JSON.stringify(state));
+    }
+
+    function loadState() {
+        const stored = localStorage.getItem('AmongUsIRL_Companion_State');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                // Deep assign structures
+                state = Object.assign(state, parsed);
+                
+                // Reconstruct View states
+                showView(state.currentView);
+                
+                // Re-populate values
+                initializeSelectSelectors();
+                updateDashboard();
+                
+                console.log("Previous active session loaded from local storage.");
+            } catch (e) {
+                console.error("Local storage restoration bypassed.", e);
+            }
+        } else {
+            loadPremadeTaskSet();
+        }
+    }
+
+    function clearState() {
+        localStorage.removeItem('AmongUsIRL_Companion_State');
+    }
+
+    // Setups and changes
+    function loadPremadeTaskSet() {
+        const val = document.getElementById('task-set-dropdown').value;
+        const poolInput = document.getElementById('task-pool-input');
+        if (val !== 'custom' && premadeTaskSets[val]) {
+            poolInput.value = premadeTaskSets[val].join('\n');
+        }
+    }
+
     function showView(viewId) {
+        state.currentView = viewId;
         Object.keys(views).forEach(key => {
             if (key === viewId) {
                 views[key].classList.add('active');
@@ -856,6 +1043,7 @@
         } else {
             document.getElementById('game-container').classList.remove('emergency-active');
         }
+        saveState();
     }
 
     function toggleTaskSetupView() {
@@ -864,20 +1052,11 @@
         detailBlock.style.display = checkbox.checked ? 'block' : 'none';
     }
 
-    // Sound generation
-    function getAudioContext() {
-        if (!state.audioCtx) {
-            state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (state.audioCtx.state === 'suspended') {
-            state.audioCtx.resume();
-        }
-        return state.audioCtx;
-    }
-
     function playSirenAlarm() {
         try {
-            const ctx = getAudioContext();
+            initAudioContext();
+            const ctx = state.audioCtx;
+            if (!ctx) return;
             const now = ctx.currentTime;
             const duration = 2.5;
             
@@ -885,7 +1064,6 @@
             const gainNode = ctx.createGain();
             
             osc.type = 'sawtooth';
-            
             osc.frequency.setValueAtTime(400, now);
             for (let i = 0; i < duration * 2; i++) {
                 osc.frequency.setValueAtTime(650, now + (i * 0.4));
@@ -901,13 +1079,15 @@
             osc.start(now);
             osc.stop(now + duration);
         } catch (e) {
-            console.log("Audio contextual trigger requirement failed.", e);
+            console.log("Procedural meeting sound bypass.", e);
         }
     }
 
     function playReportSound() {
         try {
-            const ctx = getAudioContext();
+            initAudioContext();
+            const ctx = state.audioCtx;
+            if (!ctx) return;
             const now = ctx.currentTime;
             const duration = 1.8;
 
@@ -915,7 +1095,6 @@
             const gainNode = ctx.createGain();
 
             osc.type = 'sine';
-            
             osc.frequency.setValueAtTime(800, now);
             osc.frequency.exponentialRampToValueAtTime(150, now + 0.4);
             
@@ -933,11 +1112,11 @@
             osc.start(now);
             osc.stop(now + duration);
         } catch (e) {
-            console.log("Audio contextual trigger requirement failed.", e);
+            console.log("Procedural report sound bypass.", e);
         }
     }
 
-    // 1B. CUSTOMIZATION/EXCLUSIONS
+    // 1B. PROCEED TO CUSTOMIZATION
     function proceedToCustomization() {
         const errorDiv = document.getElementById('setup-error');
         errorDiv.style.display = 'none';
@@ -959,7 +1138,7 @@
             return;
         }
         if (impCount + sciCount + detCount > uniqueNames.length) {
-            showSetupError(`The total number of specialized roles (${impCount + sciCount + detCount}) exceeds your total player count (${uniqueNames.length}).`);
+            showSetupError(`Total special roles (${impCount + sciCount + detCount}) exceed players (${uniqueNames.length}).`);
             return;
         }
 
@@ -971,8 +1150,8 @@
             row.className = 'config-player-row';
             row.innerHTML = `
                 <span style="font-weight:bold;">${name}</span>
-                <label class="checkbox-container" style="margin-bottom:0;">
-                    <input type="checkbox" checked id="has-tasks-idx-${idx}" value="${name}"> Has Tasks
+                <label class="checkbox-container" style="margin-bottom:0; padding: 4px 8px;">
+                    <input type="checkbox" checked id="has-tasks-idx-${idx}"> Has Tasks
                 </label>
             `;
             container.appendChild(row);
@@ -992,6 +1171,8 @@
         const detCount = parseInt(document.getElementById('detective-count').value, 10);
         const adminPass = document.getElementById('admin-passcode').value.trim();
         const tasksEnabled = document.getElementById('enable-tasks-toggle').checked;
+        const cooldown = parseInt(document.getElementById('cooldown-input').value, 10);
+        const maxMeetings = parseInt(document.getElementById('max-meetings-input').value, 10);
 
         let selectedTasksPool = [];
         let taskConfigNum = 3;
@@ -1011,6 +1192,12 @@
         state.taskPool = selectedTasksPool;
         state.clueDatabase = [];
         state.unannouncedDeaths = [];
+        
+        // Setup Constraints
+        state.meetingCooldown = cooldown;
+        state.maxMeetingsPerPlayer = maxMeetings;
+        state.lastMeetingTime = 0;
+        state.activeSabotage = null;
 
         state.players = uniqueNames.map((name, idx) => {
             const hasTasksCheck = document.getElementById(`has-tasks-idx-${idx}`);
@@ -1022,6 +1209,7 @@
                 pin: '', 
                 hasTasks: playerHasTasks,
                 tasks: [],
+                meetingsCalled: 0,
                 scansUsed: 0
             };
         });
@@ -1065,13 +1253,6 @@
         errorDiv.style.display = 'block';
     }
 
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-    }
-
     function isPasscodeValid(player, code) {
         if (!code) return false;
         const cleanedInput = code.trim();
@@ -1086,6 +1267,7 @@
         const currentPlayer = state.players[state.revealIndex];
         document.getElementById('pass-target-name').innerText = currentPlayer.name;
         document.getElementById('reveal-progress').innerText = `Player ${state.revealIndex + 1} of ${state.players.length}`;
+        saveState();
     }
 
     function showPlayerRole() {
@@ -1100,22 +1282,22 @@
             roleCard.className = 'reveal-box impostor-role';
             roleTitle.className = 'role-text imp';
             roleTitle.innerText = 'IMPOSTOR';
-            roleDesc.innerText = 'Blend in. Fake tasks to look busy. Quietly eliminate Crewmates without getting caught.';
+            roleDesc.innerText = 'Blend in. Fake tasks to look busy. Quietly eliminate Crewmates and call sabotages.';
         } else if (currentPlayer.role === 'scientist') {
             roleCard.className = 'reveal-box scientist-role';
             roleTitle.className = 'role-text sci';
             roleTitle.innerText = 'SCIENTIST';
-            roleDesc.innerText = 'You are a Crewmate. Access your vitals monitor to check player heartbeats.';
+            roleDesc.innerText = 'Crewmate. Access vitals monitor to check player heartbeats.';
         } else if (currentPlayer.role === 'detective') {
             roleCard.className = 'reveal-box detective-role';
             roleTitle.className = 'role-text det';
             roleTitle.innerText = 'DETECTIVE';
-            roleDesc.innerText = 'You are a Crewmate. Access your footprint database to trace reported death locations.';
+            roleDesc.innerText = 'Crewmate. Access clue footprint registry database to trace body find-locations.';
         } else {
             roleCard.className = 'reveal-box crewmate-role';
             roleTitle.className = 'role-text crew';
             roleTitle.innerText = 'CREWMATE';
-            roleDesc.innerText = 'Complete real-world tasks. Observe player patterns. Expose the Impostor.';
+            roleDesc.innerText = 'Complete real-world tasks. Observe patterns. Expose the Impostor.';
         }
 
         const taskBlock = document.getElementById('reveal-tasks-list-block');
@@ -1127,16 +1309,11 @@
             if (!currentPlayer.hasTasks) {
                 document.getElementById('reveal-tasks-header').innerText = "Status:";
                 const li = document.createElement('li');
-                li.innerText = "NO TASKS ASSIGNED (Observe the crew and help solve the mystery!)";
+                li.innerText = "NO TASKS ASSIGNED (Keep watch and solve mysteries!)";
                 li.style.color = "var(--accent)";
                 taskListUl.appendChild(li);
             } else {
-                if (currentPlayer.role === 'impostor') {
-                    document.getElementById('reveal-tasks-header').innerText = "Assigned FAKE Tasks (Do not count to score):";
-                } else {
-                    document.getElementById('reveal-tasks-header').innerText = "Assigned REAL Tasks:";
-                }
-
+                document.getElementById('reveal-tasks-header').innerText = currentPlayer.role === 'impostor' ? "Assigned FAKE Tasks:" : "Assigned REAL Tasks:";
                 currentPlayer.tasks.forEach(t => {
                     const li = document.createElement('li');
                     li.innerText = t.text;
@@ -1198,7 +1375,7 @@
             
             const statusBadge = document.createElement('span');
             statusBadge.className = `player-status-badge ${isAlive ? 'alive' : 'dead'}`;
-            statusBadge.innerText = isAlive ? 'Alive' : 'Eliminated / Dead';
+            statusBadge.innerText = isAlive ? 'Alive' : 'Dead';
 
             info.appendChild(nameSpan);
             info.appendChild(statusBadge);
@@ -1232,6 +1409,7 @@
         document.getElementById('dash-crew-count').innerText = aliveCrews;
         document.getElementById('dash-imp-count').innerText = aliveImps;
 
+        // Admin indicator updates
         const authBtn = document.getElementById('admin-auth-toggle-btn');
         const statusText = document.getElementById('admin-status-text');
         if (state.isAdminAuthenticated) {
@@ -1246,6 +1424,17 @@
             authBtn.className = "btn btn-warning";
         }
 
+        // Sabotages indicator updates
+        const sabBanner = document.getElementById('sabotage-indicator');
+        const sabText = document.getElementById('sabotage-banner-text');
+        if (state.activeSabotage) {
+            sabBanner.style.display = 'block';
+            sabText.innerText = getSabotageDescription(state.activeSabotage);
+        } else {
+            sabBanner.style.display = 'none';
+        }
+
+        // Progress bar updates
         const progressBlock = document.getElementById('dash-task-progress-block');
         const tasksBtn = document.getElementById('player-tasks-btn');
         if (state.tasksEnabled) {
@@ -1261,11 +1450,19 @@
         document.getElementById('detective-clues-btn').style.display = state.detectiveCount > 0 ? 'block' : 'none';
 
         checkGameConditions();
+        saveState();
+    }
+
+    function getSabotageDescription(type) {
+        if (type === 'oksijen') return "OKSİJEN SIZINTISI! (İki kişi oksijen vanasına koşup 30'dan geriye saymalı)";
+        if (type === 'isiklar') return "ELEKTRİK KESİNTİSİ! (Elektrik panosuna gidip birisi 15 şınav/jumping jack çekmeli)";
+        if (type === 'iletisim') return "İLETİŞİM KOPTU! (Çözüm alanında bir oyuncu sessizce bir kelime bulmacası çözmeli)";
+        if (type === 'reaktor') return "REAKTÖR ERİMESİ! (İki oyuncu reaktör duvarına el basıp 10 saniye beklemeli)";
+        return "Sabotaj";
     }
 
     function flagSilentDeath(name) {
         if (!state.isAdminAuthenticated) return;
-        
         const p = state.players.find(x => x.name === name);
         if (p && p.status === 'alive') {
             p.status = 'dead';
@@ -1332,48 +1529,81 @@
     }
 
     function initializeSelectSelectors() {
-        const selectTaskPlayer = document.getElementById('task-select-player');
-        const selectReportFinder = document.getElementById('report-finder');
-        const selectReportVictim = document.getElementById('report-victim');
-        const selectVitalsPlayer = document.getElementById('vitals-select-player');
-        const selectDetectivePlayer = document.getElementById('clues-select-player');
-
-        selectTaskPlayer.innerHTML = '';
-        selectReportFinder.innerHTML = '';
-        selectReportVictim.innerHTML = '';
-        selectVitalsPlayer.innerHTML = '';
-        selectDetectivePlayer.innerHTML = '';
+        const selects = [
+            'task-select-player', 'report-finder', 'report-victim', 
+            'vitals-select-player', 'clues-select-player', 
+            'meeting-initiator-select', 'sab-trigger-player', 'sab-resolve-player'
+        ];
+        
+        const dropdowns = {};
+        selects.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerHTML = '';
+                dropdowns[id] = el;
+            }
+        });
 
         state.players.forEach(p => {
-            const opt1 = document.createElement('option');
-            opt1.value = p.name;
-            opt1.innerText = p.name;
-            selectTaskPlayer.appendChild(opt1);
-
-            const optFinder = document.createElement('option');
-            optFinder.value = p.name;
-            optFinder.innerText = p.name;
-            selectReportFinder.appendChild(optFinder);
-
-            const optVictim = document.createElement('option');
-            optVictim.value = p.name;
-            optVictim.innerText = p.name;
-            selectReportVictim.appendChild(optVictim);
-
-            if (p.role === 'scientist') {
-                const optSci = document.createElement('option');
-                optSci.value = p.name;
-                optSci.innerText = p.name;
-                selectVitalsPlayer.appendChild(optSci);
+            // Task selection dropdown
+            if (dropdowns['task-select-player']) {
+                const opt = document.createElement('option');
+                opt.value = p.name; opt.innerText = p.name;
+                dropdowns['task-select-player'].appendChild(opt);
             }
-            if (p.role === 'detective') {
-                const optDet = document.createElement('option');
-                optDet.value = p.name;
-                optDet.innerText = p.name;
-                selectDetectivePlayer.appendChild(optDet);
+
+            // Finder dropdown
+            if (p.status === 'alive' && dropdowns['report-finder']) {
+                const opt = document.createElement('option');
+                opt.value = p.name; opt.innerText = p.name;
+                dropdowns['report-finder'].appendChild(opt);
+            }
+
+            // Victim dropdown
+            if (p.status === 'dead' && dropdowns['report-victim']) {
+                const opt = document.createElement('option');
+                opt.value = p.name; opt.innerText = p.name;
+                dropdowns['report-victim'].appendChild(opt);
+            }
+
+            // Scientists dropdown
+            if (p.role === 'scientist' && dropdowns['vitals-select-player']) {
+                const opt = document.createElement('option');
+                opt.value = p.name; opt.innerText = p.name;
+                dropdowns['vitals-select-player'].appendChild(opt);
+            }
+
+            // Detectives dropdown
+            if (p.role === 'detective' && dropdowns['clues-select-player']) {
+                const opt = document.createElement('option');
+                opt.value = p.name; opt.innerText = p.name;
+                dropdowns['clues-select-player'].appendChild(opt);
+            }
+
+            // Initiator dropdown (Alive players)
+            if (p.status === 'alive' && dropdowns['meeting-initiator-select']) {
+                const opt = document.createElement('option');
+                opt.value = p.name; opt.innerText = `${p.name} (Meetings called: ${p.meetingsCalled}/${state.maxMeetingsPerPlayer})`;
+                dropdowns['meeting-initiator-select'].appendChild(opt);
+            }
+
+            // Impostors & Admin trigger dropdown
+            if (dropdowns['sab-trigger-player']) {
+                const opt = document.createElement('option');
+                opt.value = p.name; opt.innerText = `${p.name} (${p.role})`;
+                dropdowns['sab-trigger-player'].appendChild(opt);
+            }
+
+            // Resolve list (Alive players)
+            if (p.status === 'alive' && dropdowns['sab-resolve-player']) {
+                const opt = document.createElement('option');
+                opt.value = p.name; opt.innerText = p.name;
+                dropdowns['sab-resolve-player'].appendChild(opt);
             }
         });
     }
+
+    // ================= MODALS SUBMISSIONS =================
 
     // MODAL: ADMIN ACCESS
     function openAdminAuthModal() {
@@ -1404,127 +1634,151 @@
         }
     }
 
-    // MODAL: RE-ROUTE TASK ACCESS
-    function openPlayerTasksAccessModal() {
-        document.getElementById('task-player-pin').value = '';
-        document.getElementById('player-task-error').style.display = 'none';
-        document.getElementById('modal-player-tasks-access').classList.add('active');
+    // MODAL: CALL EMERGENCY MEETING
+    function openCallMeetingModal() {
+        if (state.activeSabotage) {
+            alert("SABOTAGE ACTIVE! Emergency meetings cannot be convened until the disruption is resolved.");
+            return;
+        }
+
+        const now = Date.now();
+        const elapsed = Math.floor((now - state.lastMeetingTime) / 1000);
+        if (elapsed < state.meetingCooldown) {
+            alert(`Emergency meetings are on cooldown. Wait another ${state.meetingCooldown - elapsed} seconds.`);
+            return;
+        }
+
+        initializeSelectSelectors();
+        document.getElementById('meeting-initiator-code').value = '';
+        document.getElementById('meeting-call-error').style.display = 'none';
+        document.getElementById('modal-call-meeting').classList.add('active');
     }
 
-    function closePlayerTasksAccessModal() {
-        document.getElementById('modal-player-tasks-access').classList.remove('active');
+    function closeCallMeetingModal() {
+        document.getElementById('modal-call-meeting').classList.remove('active');
     }
 
-    function verifyPlayerTasksPin() {
-        const selectedName = document.getElementById('task-select-player').value;
-        const enteredPin = document.getElementById('task-player-pin').value.trim();
-        const errorDiv = document.getElementById('player-task-error');
+    function submitCallEmergencyMeeting() {
+        const name = document.getElementById('meeting-initiator-select').value;
+        const code = document.getElementById('meeting-initiator-code').value.trim();
+        const errorDiv = document.getElementById('meeting-call-error');
 
-        const foundPlayer = state.players.find(p => p.name === selectedName);
-
-        if (foundPlayer && isPasscodeValid(foundPlayer, enteredPin)) {
-            state.activeTaskEditingPlayer = foundPlayer;
-            closePlayerTasksAccessModal();
-            openPlayerTaskSheetModal();
-        } else {
+        const player = state.players.find(p => p.name === name);
+        if (!player || !isPasscodeValid(player, code)) {
+            errorDiv.innerText = "Authentication Failed. Incorrect PIN or Admin code.";
             errorDiv.style.display = 'block';
+            return;
         }
+
+        // Check meeting quota limits unless bypassed by admin
+        const isAdmin = (player.pin !== code);
+        if (player.meetingsCalled >= state.maxMeetingsPerPlayer && !isAdmin) {
+            errorDiv.innerText = `Call quota exceeded (${state.maxMeetingsPerPlayer}/${state.maxMeetingsPerPlayer}).`;
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (!isAdmin) {
+            player.meetingsCalled++;
+        }
+
+        state.lastMeetingTime = Date.now();
+        closeCallMeetingModal();
+
+        // Setup Meeting Display Parameters
+        document.getElementById('meeting-reporter-name').innerText = player.name;
+        document.getElementById('meeting-reported-dead-block').style.display = 'none';
+
+        triggerEmergencyMeeting(false); 
     }
 
-    function openPlayerTaskSheetModal() {
-        const player = state.activeTaskEditingPlayer;
-        if (!player) return;
-
-        document.getElementById('task-sheet-title').innerText = `${player.name}'s Tasks`;
-        const subtitle = document.getElementById('task-sheet-subtitle');
-        
-        if (player.role === 'impostor') {
-            subtitle.innerText = "Impostor Fake Tasks: Do not check these off. Blend in with the crew!";
-            subtitle.style.color = "var(--impostor)";
-        } else if (!player.hasTasks) {
-            subtitle.innerText = "You have no tasks assigned this game. Focus on gathering evidence!";
-            subtitle.style.color = "var(--accent)";
-        } else {
-            subtitle.innerText = "Check off completed real life tasks.";
-            subtitle.style.color = "var(--text-muted)";
-        }
-
-        const container = document.getElementById('player-task-checkboxes');
-        container.innerHTML = '';
-
-        if (player.hasTasks) {
-            player.tasks.forEach((task, idx) => {
-                const li = document.createElement('li');
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `task-chk-${idx}`;
-                checkbox.checked = task.completed;
-                if (player.role === 'impostor') checkbox.disabled = true;
-
-                const label = document.createElement('label');
-                label.setAttribute('for', `task-chk-${idx}`);
-                label.innerText = task.text;
-                label.style.marginBottom = '0';
-                label.style.cursor = player.role === 'impostor' ? 'not-allowed' : 'pointer';
-
-                li.appendChild(checkbox);
-                li.appendChild(label);
-                container.appendChild(li);
-            });
-        } else {
-            const li = document.createElement('li');
-            li.innerText = "No tasks assigned to your player slot.";
-            container.appendChild(li);
-        }
-
-        document.getElementById('modal-player-tasks-sheet').classList.add('active');
+    // MODAL: SABOTAGES (TRIGGER)
+    function openSabotageTriggerModal() {
+        initializeSelectSelectors();
+        document.getElementById('sab-trigger-code').value = '';
+        document.getElementById('sabotage-trigger-error').style.display = 'none';
+        document.getElementById('modal-sabotage-trigger').classList.add('active');
     }
 
-    function saveAndCloseTaskSheet() {
-        const player = state.activeTaskEditingPlayer;
-        if (player && player.role !== 'impostor' && player.hasTasks) {
-            player.tasks.forEach((task, idx) => {
-                const cb = document.getElementById(`task-chk-${idx}`);
-                if (cb) {
-                    task.completed = cb.checked;
-                }
-            });
+    function closeSabotageTriggerModal() {
+        document.getElementById('modal-sabotage-trigger').classList.remove('active');
+    }
+
+    function submitSabotageTrigger() {
+        const name = document.getElementById('sab-trigger-player').value;
+        const code = document.getElementById('sab-trigger-code').value.trim();
+        const sabType = document.getElementById('sab-type-select').value;
+        const errorDiv = document.getElementById('sabotage-trigger-error');
+
+        const player = state.players.find(p => p.name === name);
+        if (!player || !isPasscodeValid(player, code)) {
+            errorDiv.innerText = "Authentication Failed. Incorrect PIN or Admin code.";
+            errorDiv.style.display = 'block';
+            return;
         }
+
+        // Only Impostors or Admins can trigger sabotages
+        const isAdmin = (player.pin !== code);
+        if (player.role !== 'impostor' && !isAdmin) {
+            errorDiv.innerText = "Sabotage access denied. Only Impostors possess authorization.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        state.activeSabotage = sabType;
+        closeSabotageTriggerModal();
+        playReportSound(); // Trigger warning alarm
+        updateDashboard();
+    }
+
+    // MODAL: SABOTAGES (RESOLVE)
+    function openResolveSabotageModal() {
+        if (!state.activeSabotage) return;
         
-        state.activeTaskEditingPlayer = null;
-        document.getElementById('modal-player-tasks-sheet').classList.remove('active');
+        initializeSelectSelectors();
+        document.getElementById('sabotage-resolve-instructions').innerText = getSabotageDescription(state.activeSabotage);
+        document.getElementById('sab-resolve-code').value = '';
+        document.getElementById('sabotage-resolve-error').style.display = 'none';
+        document.getElementById('modal-sabotage-resolve').classList.add('active');
+    }
+
+    function closeResolveSabotageModal() {
+        document.getElementById('modal-sabotage-resolve').classList.remove('active');
+    }
+
+    function submitSabotageResolve() {
+        const name = document.getElementById('sab-resolve-player').value;
+        const code = document.getElementById('sab-resolve-code').value.trim();
+        const errorDiv = document.getElementById('sabotage-resolve-error');
+
+        const player = state.players.find(p => p.name === name);
+        if (!player || !isPasscodeValid(player, code)) {
+            errorDiv.innerText = "Authentication Failed. Incorrect PIN or Admin code.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // Clear sabotage
+        state.activeSabotage = null;
+        closeResolveSabotageModal();
         updateDashboard();
     }
 
     // MODAL: REPORT BODY
     function openReportBodyModal() {
-        const selectFinder = document.getElementById('report-finder');
-        const selectVictim = document.getElementById('report-victim');
-        
-        selectFinder.innerHTML = '';
-        selectVictim.innerHTML = '';
+        if (state.activeSabotage) {
+            alert("SABOTAGE ACTIVE! Bodies cannot be reported until the disruption is resolved.");
+            return;
+        }
 
-        state.players.forEach(p => {
-            if (p.status === 'alive') {
-                const oFinder = document.createElement('option');
-                oFinder.value = p.name;
-                oFinder.innerText = p.name;
-                selectFinder.appendChild(oFinder);
-            } else {
-                const oVictim = document.createElement('option');
-                oVictim.value = p.name;
-                oVictim.innerText = p.name;
-                selectVictim.appendChild(oVictim);
-            }
-        });
-
+        initializeSelectSelectors();
         document.getElementById('report-finder-code').value = '';
         document.getElementById('report-location').value = '';
         document.getElementById('report-error').style.display = 'none';
 
+        const selectVictim = document.getElementById('report-victim');
         if (selectVictim.options.length === 0) {
-            alert("No deceased players currently marked. Use the Admin panel to flag someone as dead silently.");
+            alert("No deceased players currently marked. Use the Admin panel to flag someone as dead silently first.");
             return;
         }
 
@@ -1555,7 +1809,7 @@
             return;
         }
 
-        const locationValue = locationInput || "Unknown Location";
+        const locationValue = locationInput || "Bilinmeyen Bölge (Unknown Location)";
 
         state.clueDatabase.push({
             victim: victimName,
@@ -1569,11 +1823,118 @@
         state.unannouncedDeaths = state.unannouncedDeaths.filter(n => n !== victimName);
 
         closeReportBodyModal();
+
+        // Setup Meeting Display Parameters
+        document.getElementById('meeting-reporter-name').innerText = finderName;
+        document.getElementById('meeting-reported-dead-block').style.display = 'block';
+        document.getElementById('meeting-victim-name').innerText = victimName;
+
         triggerEmergencyMeeting(true); 
+    }
+
+    // MODAL: TASK MANAGEMENT
+    function openPlayerTasksAccessModal() {
+        initializeSelectSelectors();
+        document.getElementById('task-player-pin').value = '';
+        document.getElementById('player-task-error').style.display = 'none';
+        document.getElementById('modal-player-tasks-access').classList.add('active');
+    }
+
+    function closePlayerTasksAccessModal() {
+        document.getElementById('modal-player-tasks-access').classList.remove('active');
+    }
+
+    function verifyPlayerTasksPin() {
+        const selectedName = document.getElementById('task-select-player').value;
+        const enteredPin = document.getElementById('task-player-pin').value.trim();
+        const errorDiv = document.getElementById('player-task-error');
+
+        const foundPlayer = state.players.find(p => p.name === selectedName);
+
+        if (foundPlayer && isPasscodeValid(foundPlayer, enteredPin)) {
+            state.activeTaskEditingPlayerName = foundPlayer.name;
+            closePlayerTasksAccessModal();
+            openPlayerTaskSheetModal();
+        } else {
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function openPlayerTaskSheetModal() {
+        const player = state.players.find(p => p.name === state.activeTaskEditingPlayerName);
+        if (!player) return;
+
+        document.getElementById('task-sheet-title').innerText = `${player.name}'s Tasks`;
+        const subtitle = document.getElementById('task-sheet-subtitle');
+        
+        if (player.role === 'impostor') {
+            subtitle.innerText = "Impostor Fake Tasks: Do not check these off. Blend in with the crew!";
+            subtitle.style.color = "var(--impostor)";
+        } else if (!player.hasTasks) {
+            subtitle.innerText = "You have no tasks assigned this game. Focus on gathering evidence!";
+            subtitle.style.color = "var(--accent)";
+        } else {
+            subtitle.innerText = "Check off completed real life tasks.";
+            subtitle.style.color = "var(--text-muted)";
+        }
+
+        const container = document.getElementById('player-task-checkboxes');
+        container.innerHTML = '';
+
+        if (player.hasTasks) {
+            player.tasks.forEach((task, idx) => {
+                const li = document.createElement('li');
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `task-chk-${idx}`;
+                checkbox.checked = task.completed;
+                if (player.role === 'impostor') checkbox.disabled = true;
+
+                // Bind custom change handlers to update checkboxes
+                checkbox.addEventListener('change', () => {
+                    task.completed = checkbox.checked;
+                    saveState();
+                });
+
+                const label = document.createElement('label');
+                label.setAttribute('for', `task-chk-${idx}`);
+                label.innerText = task.text;
+                label.style.marginBottom = '0';
+                label.style.cursor = player.role === 'impostor' ? 'not-allowed' : 'pointer';
+
+                li.appendChild(checkbox);
+                li.appendChild(label);
+                container.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.innerText = "No tasks assigned to your player slot.";
+            container.appendChild(li);
+        }
+
+        document.getElementById('modal-player-tasks-sheet').classList.add('active');
+    }
+
+    function saveAndCloseTaskSheet() {
+        const player = state.players.find(p => p.name === state.activeTaskEditingPlayerName);
+        if (player && player.role !== 'impostor' && player.hasTasks) {
+            player.tasks.forEach((task, idx) => {
+                const cb = document.getElementById(`task-chk-${idx}`);
+                if (cb) {
+                    task.completed = cb.checked;
+                }
+            });
+        }
+        
+        state.activeTaskEditingPlayerName = null;
+        document.getElementById('modal-player-tasks-sheet').classList.remove('active');
+        updateDashboard();
     }
 
     // MODAL: SCIENTIST VITALS ACCESS
     function openVitalsAccessModal() {
+        initializeSelectSelectors();
         const select = document.getElementById('vitals-select-player');
         if (select.options.length === 0) {
             alert("There are no active Scientists assigned in this session.");
@@ -1596,7 +1957,7 @@
         const foundPlayer = state.players.find(p => p.name === sciName);
 
         if (foundPlayer && isPasscodeValid(foundPlayer, enteredPin)) {
-            state.activeScientistPlayer = foundPlayer;
+            state.activeScientistPlayerName = foundPlayer.name;
             closeVitalsAccessModal();
             openVitalsDisplay();
         } else {
@@ -1605,7 +1966,7 @@
     }
 
     function openVitalsDisplay() {
-        const scientist = state.activeScientistPlayer;
+        const scientist = state.players.find(p => p.name === state.activeScientistPlayerName);
         const grid = document.getElementById('vitals-container-grid');
         const chargesLabel = document.getElementById('vitals-charges-left');
         
@@ -1634,7 +1995,7 @@
             vital.innerHTML = `
                 <div style="font-weight:bold; font-size:1.1rem; color:var(--text-color);">${p.name}</div>
                 <div style="margin-top:5px; font-weight:bold; font-size:0.8rem; text-transform:uppercase;">
-                    ${isAlive ? '🟢 Heartbeat Normal' : '🔴 No Signal'}
+                    ${isAlive ? '🟢 Normal' : '🔴 No Signal'}
                 </div>
             `;
             grid.appendChild(vital);
@@ -1644,13 +2005,14 @@
     }
 
     function closeVitalsDisplay() {
-        state.activeScientistPlayer = null;
+        state.activeScientistPlayerName = null;
         document.getElementById('modal-vitals-display').classList.remove('active');
         updateDashboard();
     }
 
     // MODAL: DETECTIVE FOOTPRINT/CLUES ACCESS
     function openDetectiveCluesAccessModal() {
+        initializeSelectSelectors();
         const select = document.getElementById('clues-select-player');
         if (select.options.length === 0) {
             alert("There are no active Detectives assigned in this session.");
@@ -1686,7 +2048,7 @@
 
         if (state.clueDatabase.length === 0) {
             const li = document.createElement('li');
-            li.innerText = "No clues reported. The directory is empty.";
+li.innerText = "No clues reported. The directory is empty.";
             li.style.color = "var(--text-muted)";
             list.appendChild(li);
         } else {
@@ -1704,7 +2066,7 @@
         document.getElementById('modal-detective-clues-display').classList.remove('active');
     }
 
-    // EMERGENCY MEETINGS & VOTES
+    // EMERGENCY MEETINGS & VOTING SYSTEM
     function triggerEmergencyMeeting(isReport = false) {
         const alivePlayers = state.players.filter(p => p.status === 'alive');
         if (alivePlayers.length === 0) return;
@@ -1812,7 +2174,6 @@
                 highestVoteCount = count;
                 targetsWithHighest = [target];
             } else if (count === highestVoteCount) {
-                targetsWithHighest.push(count);
                 targetsWithHighest.push(target);
             }
         });
@@ -1908,6 +2269,7 @@
         });
 
         showView('gameover');
+        clearState(); // Reset local storage so a fresh game session can start next time
     }
 
     function resetToSetup(retainPlayers) {
@@ -1921,7 +2283,8 @@
     }
 
     function confirmEndGame() {
-        if (confirm("Are you sure you want to end the current game?")) {
+        if (confirm("Are you sure you want to end the current game? All local data will be reset.")) {
+            clearState();
             showView('setup');
         }
     }
@@ -1934,6 +2297,11 @@
                 .catch(err => console.log('Service Worker registration failed.', err));
         });
     }
+
+    // Auto-load session state on startup
+    window.addEventListener('DOMContentLoaded', () => {
+        loadState();
+    });
 </script>
 
 </body>
